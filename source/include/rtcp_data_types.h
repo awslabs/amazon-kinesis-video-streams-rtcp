@@ -18,12 +18,15 @@
 // #define STATUS_RTCP_INPUT_REMB_TOO_SMALL        
 // #define STATUS_RTCP_INPUT_REMB_INVALID         
 
-#define RTCP_HEADER_LENGTH  4
-#define RTCP_HEADER_VERSION 2
-#define RTCP_HEADER_VERSION_MASK 0xC0
-#define RTCP_HEADER_VERSION_LOCATION 6
-#define RTCP_PACKET_RRC_BITMASK 0x1F
-#define RTCP_PACKET_LEN_WORD_SIZE 4
+#define RTCP_HEADER_LENGTH                      4
+#define RTCP_HEADER_VERSION                     2
+#define RTCP_HEADER_VERSION_MASK                0xC0
+#define RTCP_HEADER_VERSION_LOCATION            6
+#define RTCP_HEADER_PADDING_MASK                0x20
+#define RTCP_HEADER_PADDING_LOCATION            5
+
+#define RTCP_PACKET_RRC_BITMASK                 0x1F
+#define RTCP_PACKET_LEN_WORD_SIZE               4
 
 typedef enum RtcpResult
 {
@@ -63,6 +66,7 @@ typedef struct RtcpContext
 
 typedef struct RtcpHeader
 {
+    uint8_t padding;
     uint8_t receptionReportCount;
     RTCP_PACKET_TYPE packetType;
     uint16_t packetLength;
@@ -78,6 +82,33 @@ typedef struct RtcpDataPacket
     size_t payloadLength;
 } RtcpPacket_t;
 
+/* RTCP sender report packet https://datatracker.ietf.org/doc/html/rfc3550#section-6.4.1
+ *      0                   1                   2                   3
+ *      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *     |V=2|P|    RC   |   PT          |             length            | header
+ *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *     |                         SSRC of sender                        |
+ *     +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+ *     |              NTP timestamp, most significant word             |  sender
+ *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+  info
+ *     |             NTP timestamp, least significant word             |
+ *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *     |                         RTP timestamp                         |
+ *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *     |                     sender's packet count                     |
+ *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *     |                      sender's octet count                     |
+ *     +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+ */
+typedef struct RtcpSenderReport
+{
+    uint32_t ssrc;
+    uint64_t ntpTime;
+    uint32_t rtpTime;
+    uint32_t packetCount;
+    uint32_t octetCount;
+} RtcpSenderReport_t;
 
 /*-----------------------------------------------------------*/
 

@@ -7,13 +7,18 @@
 RtcpResult_t Rtcp_Init( RtcpContext_t * pCtx );
 
 RtcpResult_t Rtcp_Serialize( RtcpContext_t * pCtx,
-                           const RtcpPacket_t * pRtcpPacket,
-                           uint8_t * pBuffer,
-                           size_t * pLength );
+                             const RtcpPacket_t * pRtcpPacket,
+                             uint8_t * pBuffer,
+                             size_t * pLength );
+
+RtcpResult_t Rtcp_CreatePayloadSenderReport( RtcpContext_t * pCtx,
+                                             RtcpPacket_t * pRtcpPacket,
+                                             size_t paylaodLength,
+                                             const RtcpSenderReport_t * pRtcpSenderReport );
 
 RtcpResult_t Rtcp_DeSerialize( RtcpContext_t * pCtx,
-                             uint8_t * pSerializedPacket,
-                             size_t serializedPacketLength,
-                             RtcpPacket_t * pRtcpPacket );
+                               uint8_t * pSerializedPacket,
+                               size_t serializedPacketLength,
+                               RtcpPacket_t * pRtcpPacket );
 
 #endif /* RTCP_API_H */

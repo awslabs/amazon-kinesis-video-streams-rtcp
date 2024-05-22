@@ -1,7 +1,7 @@
-APP_NAME = "deserializer.bin"
+APP_NAME = "rtcp_app.bin"
 
 # Source Files
-SRCS += "deserializer_app.c"
+SRCS += "rtcp_app.c"
 SRCS += "../source/rtcp_api.c"
 SRCS += "../source/rtcp_endianness.c"
 
