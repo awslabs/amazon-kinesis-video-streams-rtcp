@@ -111,11 +111,11 @@ RtcpResult_t RollingBuffer_AddDatatoIndex( RollingBufferContext_t * pRBCtx,
 
     if( result == RTCP_RESULT_OK )
     {
-        pData = pRBCtx->pRollingBuffer[ ROLLING_BUFFER_MAP_INDEX(pRBCtx, index) ];
-        if (*pData != ( size_t ) NULL ) {
+        pData = &( pRBCtx->pRollingBuffer[ ROLLING_BUFFER_MAP_INDEX(pRBCtx, index) ]);
+        if( * pData != ( size_t ) NULL ) {
            /* TODO free */
         }
-        *pData = rtpPacketStart;
+        * pData = rtpPacketStart;
     }
 
     return result;
@@ -135,7 +135,7 @@ RtcpResult_t RollingBuffer_GetData( RollingBufferContext_t * pRBCtx,
     {
         result = RTCP_RESULT_BAD_PARAM;
     }
-    
+
     if( result == RTCP_RESULT_OK )
     {
         if( pRBCtx->headIndex > index &&
@@ -166,7 +166,7 @@ RtcpResult_t RollingBuffer_GetSize( RollingBufferContext_t * pRBCtx,
     {
         result = RTCP_RESULT_BAD_PARAM;
     }
-    
+
     if( result == RTCP_RESULT_OK )
     {
         * pSize = pRBCtx->filledLength;
@@ -184,7 +184,7 @@ RtcpResult_t RollingBuffer_IsEmpty( RollingBufferContext_t * pRBCtx,
     {
         result = RTCP_RESULT_BAD_PARAM;
     }
-    
+
     if( result == RTCP_RESULT_OK )
     {
         if(pRBCtx->filledLength == 0 )
@@ -194,7 +194,7 @@ RtcpResult_t RollingBuffer_IsEmpty( RollingBufferContext_t * pRBCtx,
         else
         {
             * pIsEmpty = 0;
-        } 
+        }
     }
 
     return result;

@@ -2,11 +2,11 @@ APP_NAME = "rtcp_app.bin"
 
 # Source Files
 SRCS += "rtcp_app.c"
-SRCS += "../source/rtcp_api.c"
-SRCS += "../source/rtcp_endianness.c"
+SRCS += "../../source/rtcp_api.c"
+SRCS += "../../source/rtcp_endianness.c"
 
 # Include Directories
-INCLUDE_DIRS += "-I../source/include/"
+INCLUDE_DIRS += "-I../../source/include/"
 
 OBJS=$(SRCS:.c=.o)
 
