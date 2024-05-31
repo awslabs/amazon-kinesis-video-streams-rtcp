@@ -12,6 +12,20 @@
 #define RTCP_READ_UINT32    ( pCtx->readWriteFunctions.readUint32Fn )
 #define RTCP_READ_UINT64    ( pCtx->readWriteFunctions.readUint64Fn )
 
+#define RTCP_HEADER_VERSION_MASK                0xC0000000
+#define RTCP_HEADER_VERSION_LOCATION            30
+#define RTCP_HEADER_PADDING_MASK                0x20000000
+#define RTCP_HEADER_PADDING_LOCATION            29
+#define RTCP_PACKET_RRC_BITMASK                 0x1F000000
+#define RTCP_PACKET_RRC_BITMASK_LOCATION        24
+#define RTCP_PACKET_TYPE_BITMASK                0x00FF0000
+#define RTCP_PACKET_TYPE_BITMASK_LOCATION       16
+#define RTCP_PACKET_LENGTH_BITMASK              0x0000FFFF
+
+#define RTCP_PACKET_LEN_WORD_SIZE               4
+
+/*-----------------------------------------------------------*/
+
 RtcpResult_t Rtcp_Init( RtcpContext_t * pCtx )
 {
     RtcpResult_t result = RTCP_RESULT_OK;
@@ -36,9 +50,9 @@ RtcpResult_t Rtcp_DeSerialize( RtcpContext_t * pCtx,
                                RtcpPacket_t * pRtcpPacket )
 {
     size_t currentIndex = 0;
-    uint16_t packetLen, total_length_bytes;
+    uint16_t packetLen, total_length;
     RtcpResult_t result = RTCP_RESULT_OK;
-    uint8_t byte;
+    uint32_t firstWord;
 
     if( ( pCtx == NULL ) ||
         ( pSerializedPacket == NULL ) ||
@@ -50,32 +64,28 @@ RtcpResult_t Rtcp_DeSerialize( RtcpContext_t * pCtx,
 
     if( result == RTCP_RESULT_OK )
     {
-        byte = pSerializedPacket[ currentIndex ];
-        
-        if( ( ( byte & RTCP_HEADER_VERSION_MASK ) >>
-                RTCP_HEADER_VERSION_LOCATION ) != RTCP_HEADER_VERSION )
+        firstWord = RTCP_READ_UINT32( &( pSerializedPacket[ currentIndex ] ) );
+
+        if( ( ( firstWord & RTCP_HEADER_VERSION_MASK ) >>
+              RTCP_HEADER_VERSION_LOCATION ) != RTCP_HEADER_VERSION )
         {
             result = RTCP_RESULT_WRONG_VERSION;
         }
-        else
-        {
-            pRtcpPacket->header.padding = ( byte & RTCP_HEADER_PADDING_MASK ) >> RTCP_HEADER_PADDING_LOCATION;
-            pRtcpPacket->header.receptionReportCount = byte & RTCP_PACKET_RRC_BITMASK;
-        }
-        currentIndex+=1;
     }
 
     if( result == RTCP_RESULT_OK )
     {
-        pRtcpPacket->header.packetType = pSerializedPacket[currentIndex];
-        currentIndex+=1;
- 
-        packetLen = RTCP_READ_UINT16( &( pSerializedPacket[ currentIndex ] ) );
+        pRtcpPacket->header.padding = ( firstWord & RTCP_HEADER_PADDING_MASK ) >> RTCP_HEADER_PADDING_LOCATION;
+        pRtcpPacket->header.receptionReportCount = ( firstWord & RTCP_PACKET_RRC_BITMASK ) >> RTCP_PACKET_RRC_BITMASK_LOCATION;
+
+        pRtcpPacket->header.packetType = ( firstWord & RTCP_PACKET_TYPE_BITMASK ) >> RTCP_PACKET_TYPE_BITMASK_LOCATION;
+
+        packetLen = firstWord & RTCP_PACKET_LENGTH_BITMASK;
         pRtcpPacket->header.packetLength = packetLen;
 
         /* The length of this RTCP packet in 32-bit words minus one. */
-        total_length_bytes = ( packetLen + 1) * RTCP_PACKET_LEN_WORD_SIZE;
-        if( serializedPacketLength < total_length_bytes )
+        total_length = ( packetLen + 1 ) * RTCP_PACKET_LEN_WORD_SIZE;
+        if( serializedPacketLength < total_length )
         {
             result = RTCP_RESULT_MALFORMED_PACKET;
         }
@@ -83,7 +93,7 @@ RtcpResult_t Rtcp_DeSerialize( RtcpContext_t * pCtx,
 
     if( result == RTCP_RESULT_OK )
     {
-        pRtcpPacket->payloadLength = total_length_bytes - RTCP_HEADER_LENGTH;
+        pRtcpPacket->payloadLength = total_length - RTCP_HEADER_LENGTH;
         pRtcpPacket->pPayload = pSerializedPacket + RTCP_PACKET_LEN_WORD_SIZE;
     }
 
@@ -98,29 +108,29 @@ RtcpResult_t Rtcp_Serialize( RtcpContext_t * pCtx,
     size_t currentIndex = 0;
     RtcpResult_t result = RTCP_RESULT_OK;
     uint16_t packetLen;
+    uint32_t firstWord = 0;
 
     if( ( pCtx == NULL ) ||
         ( pRtcpPacket == NULL ) ||
         ( pLength == NULL ) ||
-        ( pLength != NULL &&
-          *pLength < RTCP_HEADER_LENGTH ))
+        ( ( pLength != NULL ) &&
+          ( *pLength < RTCP_HEADER_LENGTH ) ) )
     {
         result = RTCP_RESULT_BAD_PARAM;
     }
 
     if( result == RTCP_RESULT_OK )
     {
-        /* Fill header information */
-        pBuffer[currentIndex] = RTCP_HEADER_VERSION << RTCP_HEADER_VERSION_LOCATION;
-        pBuffer[currentIndex] |= ( pRtcpPacket->header.padding << RTCP_HEADER_PADDING_LOCATION );
-        currentIndex += 1;
-        pBuffer[currentIndex] = pRtcpPacket->header.packetType;
-        currentIndex += 1;
+        firstWord = RTCP_HEADER_VERSION << RTCP_HEADER_VERSION_LOCATION;
+        firstWord |= pRtcpPacket->header.padding << RTCP_HEADER_PADDING_LOCATION;
+        firstWord |= pRtcpPacket->header.packetType << RTCP_PACKET_TYPE_BITMASK_LOCATION;
 
-        packetLen = (pRtcpPacket->header.packetLength / RTCP_PACKET_LEN_WORD_SIZE) - 1;
-        RTCP_WRITE_UINT16( &( pBuffer[ currentIndex ] ),
-                          packetLen );
-        currentIndex += 2;
+        packetLen = ( pRtcpPacket->header.packetLength / RTCP_PACKET_LEN_WORD_SIZE ) - 1;
+        firstWord |= packetLen;
+
+        RTCP_WRITE_UINT32( &( pBuffer[ currentIndex ] ),
+                           firstWord );
+        currentIndex += 4;
 
         /* Fill payload */
         if( ( pRtcpPacket->pPayload != NULL ) &&
@@ -149,8 +159,8 @@ RtcpResult_t Rtcp_CreatePayloadSenderReport( RtcpContext_t * pCtx,
     if( ( pCtx == NULL ) ||
         ( pRtcpSenderReport == NULL ) ||
         ( pRtcpPacket == NULL ) ||
-        ( pRtcpPacket != NULL &&
-          pPayload == NULL ))
+        ( ( pRtcpPacket != NULL ) &&
+          ( pPayload == NULL ) ) )
     {
         result = RTCP_RESULT_BAD_PARAM;
     }
@@ -166,19 +176,19 @@ RtcpResult_t Rtcp_CreatePayloadSenderReport( RtcpContext_t * pCtx,
     if( result == RTCP_RESULT_OK )
     {
         RTCP_WRITE_UINT32( &( pPayload[ currentIndex ] ),
-                          pRtcpSenderReport->ssrc );
+                           pRtcpSenderReport->ssrc );
         currentIndex += 4;
         RTCP_WRITE_UINT64( &( pPayload[ currentIndex ] ),
-                          pRtcpSenderReport->ntpTime );
+                           pRtcpSenderReport->ntpTime );
         currentIndex += 8;
         RTCP_WRITE_UINT32( &( pPayload[ currentIndex ] ),
-                          pRtcpSenderReport->rtpTime );
+                           pRtcpSenderReport->rtpTime );
         currentIndex += 4;
         RTCP_WRITE_UINT32( &( pPayload[ currentIndex ] ),
-                          pRtcpSenderReport->packetCount );
+                           pRtcpSenderReport->packetCount );
         currentIndex += 4;
         RTCP_WRITE_UINT32( &( pPayload[ currentIndex ] ),
-                          pRtcpSenderReport->octetCount );
+                           pRtcpSenderReport->octetCount );
         currentIndex += 4;
 
         pRtcpPacket->payloadLength = currentIndex;

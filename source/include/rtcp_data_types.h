@@ -20,13 +20,6 @@
 
 #define RTCP_HEADER_LENGTH                      4
 #define RTCP_HEADER_VERSION                     2
-#define RTCP_HEADER_VERSION_MASK                0xC0
-#define RTCP_HEADER_VERSION_LOCATION            6
-#define RTCP_HEADER_PADDING_MASK                0x20
-#define RTCP_HEADER_PADDING_LOCATION            5
-
-#define RTCP_PACKET_RRC_BITMASK                 0x1F
-#define RTCP_PACKET_LEN_WORD_SIZE               4
 
 typedef enum RtcpResult
 {
