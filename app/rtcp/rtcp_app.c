@@ -7,6 +7,8 @@
 /* RTP includes. */
 #include "rtcp_api.h"
 
+#define RTCP_READ_UINT32    ( ctx.readWriteFunctions.readUint32Fn )
+
 static void deserialize_test1( void )
 {
     RtcpPacket_t rtcpPacket;
@@ -52,7 +54,6 @@ static void deserialize_test1( void )
     assert( RTCP_RESULT_OK == result );
 
 }
-
 /*-----------------------------------------------------------*/
 
 static void deserialize_test2( void )
@@ -102,6 +103,72 @@ static void deserialize_test2( void )
     currentOffset += ( rtcpPacket.payloadLength + RTCP_HEADER_LENGTH );
     assert( currentOffset == sizeof( compoundPacket ) );
 }
+/*-----------------------------------------------------------*/
+
+void deserialize_rembValueGet()
+{
+    RtcpPacket_t rtcpPacket;
+    RtcpContext_t ctx;
+    RtcpResult_t result;
+    size_t ssrcListLen = 0;
+    uint64_t maximumBitRate = 0;
+    uint32_t * pSsrcList1, * pSsrcList2;
+    uint8_t bufferNoUniqueIdentifier[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t singleSSRC[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x52, 0x45, 0x4d, 0x42, 0x01, 0x12, 0x76, 0x28, 0x6c, 0x76, 0xe8, 0x55 };
+    uint8_t multipleSSRC[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x52, 0x45, 0x4d, 0x42,
+                               0x02, 0x12, 0x76, 0x28, 0x6c, 0x76, 0xe8, 0x55, 0x42, 0x42, 0x42, 0x42 };
+    uint8_t invalidSSRCLength[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x52, 0x45,
+                                    0x4d, 0x42, 0xFF, 0x12, 0x76, 0x28, 0x6c, 0x76, 0xe8, 0x55 };
+
+    memset( &rtcpPacket,
+            0x00,
+            sizeof( RtcpPacket_t ) );
+
+    result = Rtcp_Init( &ctx );
+    assert( RTCP_RESULT_OK == result );
+
+    result = Rtcp_ParseRembPacket( &ctx,
+                                   bufferNoUniqueIdentifier,
+                                   sizeof( bufferNoUniqueIdentifier ),
+                                   &ssrcListLen,
+                                   &pSsrcList1,
+                                   &maximumBitRate );
+    assert( result == RTCP_RESULT_INPUT_REMB_INVALID );
+
+    result = Rtcp_ParseRembPacket( &ctx,
+                                   singleSSRC,
+                                   sizeof( singleSSRC ),
+                                   &ssrcListLen,
+                                   &pSsrcList1,
+                                   &maximumBitRate );
+
+    assert( RTCP_RESULT_OK == RTCP_RESULT_OK );
+    assert( ssrcListLen == 1 );
+    assert( maximumBitRate == 2581120 );
+    assert( RTCP_READ_UINT32( ( uint8_t * )&( pSsrcList1[0] ) ) == 0x6c76e855 );
+
+    result = Rtcp_ParseRembPacket( &ctx,
+                                   multipleSSRC,
+                                   sizeof( multipleSSRC ),
+                                   &ssrcListLen,
+                                   &pSsrcList2,
+                                   &maximumBitRate );
+    assert( RTCP_RESULT_OK == RTCP_RESULT_OK );
+    assert( ssrcListLen == 2 );
+    assert( maximumBitRate == 2581120 );
+    assert( RTCP_READ_UINT32( ( uint8_t * )&( pSsrcList2[0] ) ) == 0x6c76e855 );
+    assert( RTCP_READ_UINT32( ( uint8_t * )&( pSsrcList2[1] ) ) == 0x42424242 );
+
+    result = Rtcp_ParseRembPacket( &ctx,
+                                   invalidSSRCLength,
+                                   sizeof( invalidSSRCLength ),
+                                   &ssrcListLen,
+                                   &pSsrcList2,
+                                   &maximumBitRate );
+    assert( RTCP_RESULT_INPUT_REMB_INVALID == result );
+}
+/*-----------------------------------------------------------*/
 
 void serialize_senderReport()
 {
@@ -155,13 +222,13 @@ void serialize_senderReport()
     }
 
 }
-
 /*-----------------------------------------------------------*/
 
 int main( void )
 {
     deserialize_test1();
     deserialize_test2();
+    deserialize_rembValueGet();
 
     printf( "\nAll deserialize test PASS.\r\n" );
 

@@ -21,4 +21,16 @@ RtcpResult_t Rtcp_DeSerialize( RtcpContext_t * pCtx,
                                size_t serializedPacketLength,
                                RtcpPacket_t * pRtcpPacket );
 
+RtcpResult_t Rtcp_ParseFIRPacket( RtcpContext_t * pCtx,
+                                  uint8_t * pPayload,
+                                  size_t paylaodLength,
+                                  uint32_t * pMediaSSRC );
+
+RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
+                                   uint8_t * pPayload,
+                                   size_t paylaodLength,
+                                   size_t * pSsrcListLength,
+                                   uint32_t ** pSsrcList,
+                                   uint64_t * pBitRate );
+
 #endif /* RTCP_API_H */

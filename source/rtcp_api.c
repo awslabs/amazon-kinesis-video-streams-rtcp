@@ -22,6 +22,12 @@
 #define RTCP_PACKET_TYPE_BITMASK_LOCATION       16
 #define RTCP_PACKET_LENGTH_BITMASK              0x0000FFFF
 
+#define RTCP_REMB_PACKET_SSRC_LEN_LOCATION      24
+#define RTCP_REMB_PACKET_SSRC_LEN_BITMASK       0xFF000000
+#define RTCP_REMB_PACKET_EXPONENT_LOCATION      18
+#define RTCP_REMB_PACKET_EXPONENT_BITMASK       0x00FC0000
+#define RTCP_REMB_PACKET_MANTISSA_BITMASK       0x0003FFFF
+
 #define RTCP_PACKET_LEN_WORD_SIZE               4
 
 /*-----------------------------------------------------------*/
@@ -99,6 +105,7 @@ RtcpResult_t Rtcp_DeSerialize( RtcpContext_t * pCtx,
 
     return result;
 }
+/*-----------------------------------------------------------*/
 
 RtcpResult_t Rtcp_Serialize( RtcpContext_t * pCtx,
                              const RtcpPacket_t * pRtcpPacket,
@@ -146,6 +153,7 @@ RtcpResult_t Rtcp_Serialize( RtcpContext_t * pCtx,
 
     return result;
 }
+/*-----------------------------------------------------------*/
 
 RtcpResult_t Rtcp_CreatePayloadSenderReport( RtcpContext_t * pCtx,
                                              RtcpPacket_t * pRtcpPacket,
@@ -196,3 +204,91 @@ RtcpResult_t Rtcp_CreatePayloadSenderReport( RtcpContext_t * pCtx,
 
     return result;
 }
+/*-----------------------------------------------------------*/
+
+RtcpResult_t Rtcp_ParseFIRPacket( RtcpContext_t * pCtx,
+                                  uint8_t * pPayload,
+                                  size_t paylaodLength,
+                                  uint32_t * pMediaSSRC )
+{
+    RtcpResult_t result = RTCP_RESULT_OK;
+    size_t currentIndex = 0;
+
+    if( ( pCtx == NULL ) ||
+        ( pPayload == NULL ) ||
+        ( paylaodLength == 0 ) )
+    {
+        result = RTCP_RESULT_BAD_PARAM;
+    }
+
+    if( result == RTCP_RESULT_OK )
+    {
+        RTCP_WRITE_UINT32( &( pPayload[ currentIndex + sizeof( uint32_t ) ] ),
+                           *pMediaSSRC );
+    }
+
+    return result;
+}
+/*-----------------------------------------------------------*/
+
+RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
+                                   uint8_t * pPayload,
+                                   size_t paylaodLength,
+                                   size_t * pSsrcListLength,
+                                   uint32_t ** ppSsrcList,
+                                   uint64_t * pBitRate )
+{
+    RtcpResult_t result = RTCP_RESULT_OK;
+    const uint8_t rembUniqueIdentifier[] = { 0x52, 0x45, 0x4d, 0x42 };
+    uint32_t rembIdentifierRead, rembIdentifier;
+    uint32_t word = 0, mantissa = 0;
+    uint8_t exponent = 0;
+    size_t rembPayloadSize = RTCP_REMB_MIN_PAYLOAD_SIZE, i;
+
+    if( ( pCtx == NULL ) ||
+        ( pPayload == NULL ) ||
+        ( pSsrcListLength == NULL ) )
+    {
+        result = RTCP_RESULT_BAD_PARAM;
+    }
+    else if( paylaodLength < rembPayloadSize )
+    {
+        result = RTCP_RESULT_INPUT_REMB_INVALID;
+    }
+
+    if( result == RTCP_RESULT_OK )
+    {
+        rembIdentifier = RTCP_READ_UINT32( &( rembUniqueIdentifier[0] ) );
+        rembIdentifierRead = RTCP_READ_UINT32( &( pPayload[ RTCP_REMB_IDENTIFIER_OFFSET ] ) );
+        if( rembIdentifierRead != rembIdentifier )
+        {
+            result = RTCP_RESULT_INPUT_REMB_INVALID;
+        }
+    }
+
+    if( result == RTCP_RESULT_OK )
+    {
+        word = RTCP_READ_UINT32( &( pPayload[ RTCP_REMB_IDENTIFIER_OFFSET + 4 ] ) );
+
+        *pSsrcListLength = ( ( word & RTCP_REMB_PACKET_SSRC_LEN_BITMASK ) >> RTCP_REMB_PACKET_SSRC_LEN_LOCATION );
+        rembPayloadSize += ( *pSsrcListLength ) * sizeof( uint32_t );
+
+        exponent = ( ( word & RTCP_REMB_PACKET_EXPONENT_BITMASK ) >> RTCP_REMB_PACKET_EXPONENT_LOCATION );
+        mantissa = ( word & RTCP_REMB_PACKET_MANTISSA_BITMASK );
+        *pBitRate = mantissa << exponent;
+
+        if( paylaodLength < rembPayloadSize )
+        {
+            result = RTCP_RESULT_INPUT_REMB_INVALID;
+        }
+    }
+
+    if( ( result == RTCP_RESULT_OK ) &&
+        ( *pSsrcListLength != 0 ) )
+    {
+        *ppSsrcList = ( uint32_t * ) &( pPayload[ RTCP_REMB_SSRC_LIST_OFFSET ] );
+    }
+
+    return result;
+}
+/*-----------------------------------------------------------*/
