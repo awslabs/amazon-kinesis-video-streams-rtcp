@@ -26,6 +26,16 @@ RtcpResult_t Rtcp_ParseFIRPacket( RtcpContext_t * pCtx,
                                   size_t paylaodLength,
                                   uint32_t * pMediaSSRC );
 
+RtcpResult_t Rtcp_ParsePLIPacket( RtcpContext_t * pCtx,
+                                  uint8_t * pPayload,
+                                  size_t paylaodLength,
+                                  uint32_t * pMediaSSRC );
+
+RtcpResult_t Rtcp_ParseSLIPacket( RtcpContext_t * pCtx,
+                                  uint8_t * pPayload,
+                                  size_t paylaodLength,
+                                  uint32_t * pMediaSSRC );
+
 RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
                                    uint8_t * pPayload,
                                    size_t paylaodLength,

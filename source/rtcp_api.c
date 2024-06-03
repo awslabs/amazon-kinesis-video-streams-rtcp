@@ -32,6 +32,31 @@
 
 /*-----------------------------------------------------------*/
 
+static RtcpResult_t Rtcp_GetMediaSSRC( RtcpContext_t * pCtx,
+                                       uint8_t * pPayload,
+                                       size_t paylaodLength,
+                                       uint32_t * pMediaSSRC )
+{
+    RtcpResult_t result = RTCP_RESULT_OK;
+    size_t currentIndex = 0;
+
+    if( ( pCtx == NULL ) ||
+        ( pPayload == NULL ) ||
+        ( paylaodLength == 0 ) )
+    {
+        result = RTCP_RESULT_BAD_PARAM;
+    }
+
+    if( result == RTCP_RESULT_OK )
+    {
+        RTCP_WRITE_UINT32( &( pPayload[ currentIndex + sizeof( uint32_t ) ] ),
+                           *pMediaSSRC );
+    }
+
+    return result;
+}
+/*-----------------------------------------------------------*/
+
 RtcpResult_t Rtcp_Init( RtcpContext_t * pCtx )
 {
     RtcpResult_t result = RTCP_RESULT_OK;
@@ -211,23 +236,34 @@ RtcpResult_t Rtcp_ParseFIRPacket( RtcpContext_t * pCtx,
                                   size_t paylaodLength,
                                   uint32_t * pMediaSSRC )
 {
-    RtcpResult_t result = RTCP_RESULT_OK;
-    size_t currentIndex = 0;
+    return Rtcp_GetMediaSSRC( pCtx,
+                              pPayload,
+                              paylaodLength,
+                              pMediaSSRC );
+}
+/*-----------------------------------------------------------*/
 
-    if( ( pCtx == NULL ) ||
-        ( pPayload == NULL ) ||
-        ( paylaodLength == 0 ) )
-    {
-        result = RTCP_RESULT_BAD_PARAM;
-    }
+RtcpResult_t Rtcp_ParsePLIPacket( RtcpContext_t * pCtx,
+                                  uint8_t * pPayload,
+                                  size_t paylaodLength,
+                                  uint32_t * pMediaSSRC )
+{
+    return Rtcp_GetMediaSSRC( pCtx,
+                              pPayload,
+                              paylaodLength,
+                              pMediaSSRC );
+}
+/*-----------------------------------------------------------*/
 
-    if( result == RTCP_RESULT_OK )
-    {
-        RTCP_WRITE_UINT32( &( pPayload[ currentIndex + sizeof( uint32_t ) ] ),
-                           *pMediaSSRC );
-    }
-
-    return result;
+RtcpResult_t Rtcp_ParseSLIPacket( RtcpContext_t * pCtx,
+                                  uint8_t * pPayload,
+                                  size_t paylaodLength,
+                                  uint32_t * pMediaSSRC )
+{
+    return Rtcp_GetMediaSSRC( pCtx,
+                              pPayload,
+                              paylaodLength,
+                              pMediaSSRC );
 }
 /*-----------------------------------------------------------*/
 
