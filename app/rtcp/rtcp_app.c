@@ -170,6 +170,37 @@ void deserialize_rembValueGet()
 }
 /*-----------------------------------------------------------*/
 
+void deserialize_senderReport()
+{
+    RtcpPacket_t rtcpPacket;
+    RtcpContext_t ctx;
+    RtcpResult_t result;
+    RtcpSenderReport_t senderReport;
+    uint8_t payload[] = { 0x2c, 0x38, 0xaf, 0xd2, 0xe9, 0xf8, 0x11, 0x68, 0x33, 0x33, 0xe8,
+                          0x64, 0x00, 0x03, 0x77, 0xca, 0x00, 0x00, 0x01, 0x4c, 0x00, 0x01, 0x0b, 0x2f };
+    size_t paylaodLength = sizeof( payload );
+
+    memset( &senderReport,
+            0x00,
+            sizeof( RtcpSenderReport_t ) );
+
+    result = Rtcp_Init( &ctx );
+    assert( RTCP_RESULT_OK == result );
+
+    result = Rtcp_ParseSenderReport( &ctx,
+                                     &( payload[0] ),
+                                     paylaodLength,
+                                     &senderReport );
+    assert( RTCP_RESULT_OK == result );
+
+    assert( senderReport.ssrc == 0x2c38afd2 );
+    assert( senderReport.ntpTime == 0xe9f811683333e864 );
+    assert( senderReport.rtpTime == 0x377ca );
+    assert( senderReport.octetCount == 0x10b2f );
+    assert( senderReport.packetCount == 0x14c );
+}
+/*-----------------------------------------------------------*/
+
 void serialize_senderReport()
 {
     RtcpPacket_t rtcpPacket;
@@ -229,6 +260,7 @@ int main( void )
     deserialize_test1();
     deserialize_test2();
     deserialize_rembValueGet();
+    deserialize_senderReport();
 
     printf( "\nAll deserialize test PASS.\r\n" );
 

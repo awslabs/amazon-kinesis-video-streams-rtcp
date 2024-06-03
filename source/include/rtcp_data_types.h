@@ -21,7 +21,9 @@
 #define RTCP_HEADER_LENGTH                      4
 #define RTCP_HEADER_VERSION                     2
 
-/*  0                   1                   2                   3
+/* RFC https://datatracker.ietf.org/doc/html/draft-alvestrand-rmcat-remb-03#section-2.2
+ *     https://datatracker.ietf.org/doc/html/rfc5104#section-4.2.1.1
+ *  0                   1                   2                   3
  *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * |V=2|P| FMT=15  |   PT=206      |             length            |
@@ -43,6 +45,10 @@
 #define RTCP_REMB_NUM_SSRC_OFFSET               12
 #define RTCP_REMB_SSRC_LIST_OFFSET              16
 #define RTCP_REMB_MIN_PAYLOAD_SIZE              16
+
+#define RTCP_SENDER_REPORT_MIN_LENGTH           24
+
+/*-----------------------------------------------------------*/
 typedef enum RtcpResult
 {
     RTCP_RESULT_OK,

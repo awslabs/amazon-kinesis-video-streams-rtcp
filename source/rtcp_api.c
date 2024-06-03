@@ -328,3 +328,37 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
     return result;
 }
 /*-----------------------------------------------------------*/
+
+RtcpResult_t Rtcp_ParseSenderReport( RtcpContext_t * pCtx,
+                                     uint8_t * pPayload,
+                                     size_t paylaodLength,
+                                     RtcpSenderReport_t * pSenderReport )
+{
+    RtcpResult_t result = RTCP_RESULT_OK;
+    size_t currentIndex = 0;
+
+    if( ( pCtx == NULL ) ||
+        ( pPayload == NULL ) ||
+        ( pSenderReport == NULL ) ||
+        ( paylaodLength < RTCP_SENDER_REPORT_MIN_LENGTH ) )
+    {
+        result = RTCP_RESULT_BAD_PARAM;
+    }
+
+    if( result == RTCP_RESULT_OK )
+    {
+        pSenderReport->ssrc = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+        pSenderReport->ntpTime = RTCP_READ_UINT64( &( pPayload[ currentIndex ] ) );
+        currentIndex += 8;
+        pSenderReport->rtpTime = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+        pSenderReport->packetCount = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+        pSenderReport->octetCount = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+    }
+
+    return result;
+}
+/*-----------------------------------------------------------*/
