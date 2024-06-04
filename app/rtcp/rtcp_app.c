@@ -201,6 +201,41 @@ void deserialize_senderReport()
 }
 /*-----------------------------------------------------------*/
 
+void deserialize_receiverReport()
+{
+    RtcpPacket_t rtcpPacket;
+    RtcpContext_t ctx;
+    RtcpResult_t result;
+    RtcpReceiverReport_t receiverReport;
+
+    uint8_t payload[] = { 0x12, 0x34, 0x56, 0x78, 0x87, 0x65, 0x43, 0x21, 0x25, 0x00, 0x00, 0x01, // Fraction lost (25 in hex, approximately 10%)
+                          0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x05 };
+    size_t paylaodLength = sizeof( payload );
+
+    memset( &receiverReport,
+            0x00,
+            sizeof( RtcpReceiverReport_t ) );
+
+    result = Rtcp_Init( &ctx );
+    assert( RTCP_RESULT_OK == result );
+
+    result = Rtcp_ParseReceiverReport( &ctx,
+                                       &( payload[0] ),
+                                       paylaodLength,
+                                       &receiverReport );
+    assert( RTCP_RESULT_OK == result );
+
+    assert( receiverReport.ssrcSender == 0x12345678 );
+    assert( receiverReport.ssrcSource == 0x87654321 );
+    assert( receiverReport.fractionLost == 0x25 );
+    assert( receiverReport.cumulativePacketsLost == 1 );
+    assert( receiverReport.extHiSeqNumReceived == 2 );
+    assert( receiverReport.interArrivalJitter == 3 );
+    assert( receiverReport.lastSR == 4 );
+    assert( receiverReport.delaySinceLastSR == 5 );
+}
+/*-----------------------------------------------------------*/
+
 void serialize_senderReport()
 {
     RtcpPacket_t rtcpPacket;
@@ -261,6 +296,7 @@ int main( void )
     deserialize_test2();
     deserialize_rembValueGet();
     deserialize_senderReport();
+    deserialize_receiverReport();
 
     printf( "\nAll deserialize test PASS.\r\n" );
 

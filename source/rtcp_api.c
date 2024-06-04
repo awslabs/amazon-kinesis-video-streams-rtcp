@@ -28,6 +28,10 @@
 #define RTCP_REMB_PACKET_EXPONENT_BITMASK       0x00FC0000
 #define RTCP_REMB_PACKET_MANTISSA_BITMASK       0x0003FFFF
 
+#define RTCP_FRACTION_LOST_LOCATION             24
+#define RTCP_FRACTION_LOST_BITMASK              0xFF000000
+#define RTCP_REMB_PACKET_LOST_BITMASK           0x00FFFFFF
+
 #define RTCP_PACKET_LEN_WORD_SIZE               4
 
 /*-----------------------------------------------------------*/
@@ -356,6 +360,49 @@ RtcpResult_t Rtcp_ParseSenderReport( RtcpContext_t * pCtx,
         pSenderReport->packetCount = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
         currentIndex += 4;
         pSenderReport->octetCount = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+    }
+
+    return result;
+}
+/*-----------------------------------------------------------*/
+
+RtcpResult_t Rtcp_ParseReceiverReport( RtcpContext_t * pCtx,
+                                       uint8_t * pPayload,
+                                       size_t paylaodLength,
+                                       RtcpReceiverReport_t * pReceiverReport )
+{
+    RtcpResult_t result = RTCP_RESULT_OK;
+    size_t currentIndex = 0;
+    uint32_t word;
+
+    if( ( pCtx == NULL ) ||
+        ( pPayload == NULL ) ||
+        ( pReceiverReport == NULL ) ||
+        ( paylaodLength < RTCP_RECEIVER_REPORT_MIN_LENGTH ) )
+    {
+        result = RTCP_RESULT_BAD_PARAM;
+    }
+
+    if( result == RTCP_RESULT_OK )
+    {
+        pReceiverReport->ssrcSender = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+        pReceiverReport->ssrcSource = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+
+        word = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        pReceiverReport->fractionLost = ( ( word & RTCP_FRACTION_LOST_BITMASK ) >> RTCP_FRACTION_LOST_LOCATION );
+        pReceiverReport->cumulativePacketsLost = word & RTCP_REMB_PACKET_LOST_BITMASK;
+        currentIndex += 4;
+
+        pReceiverReport->extHiSeqNumReceived = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+        pReceiverReport->interArrivalJitter = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+        pReceiverReport->lastSR = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+        pReceiverReport->delaySinceLastSR = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
         currentIndex += 4;
     }
 

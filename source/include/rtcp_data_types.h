@@ -47,6 +47,8 @@
 #define RTCP_REMB_MIN_PAYLOAD_SIZE              16
 
 #define RTCP_SENDER_REPORT_MIN_LENGTH           24
+#define RTCP_RECEIVER_REPORT_BLOCK_LENGTH       24
+#define RTCP_RECEIVER_REPORT_MIN_LENGTH         4 + RTCP_RECEIVER_REPORT_BLOCK_LENGTH
 
 /*-----------------------------------------------------------*/
 typedef enum RtcpResult
@@ -132,6 +134,44 @@ typedef struct RtcpSenderReport
     uint32_t packetCount;
     uint32_t octetCount;
 } RtcpSenderReport_t;
+
+/*        0                   1                   2                   3
+ *        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ *        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * header |V=2|P|    RC   |   PT=RR=201   |             length            |
+ *        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *        |                     SSRC of packet sender                     |
+ *        +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+ *  report |                 SSRC_1 (SSRC of first source)                 |
+ *  block  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *   1    | fraction lost |       cumulative number of packets lost       |
+ *        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *        |           extended highest sequence number received           |
+ *        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *        |                      interarrival jitter                      |
+ *        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *        |                         last SR (LSR)                         |
+ *        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *        |                   delay since last SR (DLSR)                  |
+ *        +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+ *  report |                 SSRC_2 (SSRC of second source)                |
+ *  block  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *   2    :                               ...                             :
+ *        +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
+ *        |                  profile-specific extensions                  |
+ *        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ */
+typedef struct RtcpReceiverReport
+{
+    uint32_t ssrcSender;
+    uint32_t ssrcSource;
+    uint8_t fractionLost;
+    uint32_t cumulativePacketsLost;
+    uint32_t extHiSeqNumReceived;
+    uint32_t interArrivalJitter;
+    uint32_t lastSR;
+    uint32_t delaySinceLastSR;
+} RtcpReceiverReport_t;
 
 /*-----------------------------------------------------------*/
 
