@@ -50,6 +50,8 @@
 #define RTCP_RECEIVER_REPORT_BLOCK_LENGTH       24
 #define RTCP_RECEIVER_REPORT_MIN_LENGTH         4 + RTCP_RECEIVER_REPORT_BLOCK_LENGTH
 
+#define RTCP_NACK_REPORT_MIN_LENGTH             8
+#define RTCP_BLP_BIT_COUNT                      16
 /*-----------------------------------------------------------*/
 typedef enum RtcpResult
 {
@@ -59,6 +61,7 @@ typedef enum RtcpResult
     RTCP_RESULT_WRONG_VERSION,
     RTCP_RESULT_MALFORMED_PACKET,
     RTCP_RESULT_INPUT_REMB_INVALID,
+    RTCP_RESULT_INPUT_NACK_LIST_INVALID,
     RTCP_RESULT_BUFFER_NOT_IN_RANGE
 } RtcpResult_t;
 
@@ -172,6 +175,14 @@ typedef struct RtcpReceiverReport
     uint32_t lastSR;
     uint32_t delaySinceLastSR;
 } RtcpReceiverReport_t;
+
+typedef struct RtcpNackPacket
+{
+    uint32_t ssrcSender;
+    uint32_t ssrcSource;
+    uint32_t seqNumListLength;
+    uint16_t * pSeqNumList;
+} RtcpNackPacket_t;
 
 /*-----------------------------------------------------------*/
 

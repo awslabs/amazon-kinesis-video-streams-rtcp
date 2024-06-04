@@ -236,6 +236,100 @@ void deserialize_receiverReport()
 }
 /*-----------------------------------------------------------*/
 
+void deserialize_nackPacket()
+{
+    RtcpPacket_t rtcpPacket;
+    RtcpContext_t ctx;
+    RtcpResult_t result;
+    RtcpNackPacket_t nackPacket;
+
+    // Assert that NACK list meets the minimum length requirement
+    uint8_t nackListTooSmall[] = {0x00, 0x00, 0x00};
+    uint8_t nackListMalformed[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    uint8_t nackListSsrcOnly[] = {0x2c, 0xd1, 0xa0, 0xde, 0x00, 0x00, 0xab, 0xe0};
+    uint8_t singlePID[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0xa8, 0x00, 0x00 };
+    uint8_t compound[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0xa8, 0x00, 0x00, 0x0c, 0xff, 0x00, 0x02};
+
+    result = Rtcp_Init( &ctx );
+    assert( RTCP_RESULT_OK == result );
+
+    /* nackListTooSmall Packet parsing */
+    memset( &nackPacket,
+            0x00,
+            sizeof( RtcpNackPacket_t ) );
+
+    result = Rtcp_ParseNackPacket( &ctx,
+                                   &( nackListTooSmall[0] ),
+                                   sizeof( nackListTooSmall ),
+                                   &nackPacket );
+    assert( RTCP_RESULT_INPUT_NACK_LIST_INVALID == result );
+
+    /* nackListMalformed Packet parsing */
+    memset( &nackPacket,
+            0x00,
+            sizeof( RtcpNackPacket_t ) );
+    result = Rtcp_ParseNackPacket( &ctx,
+                                   &( nackListMalformed[0] ),
+                                   sizeof( nackListMalformed ),
+                                   &nackPacket );
+    assert( RTCP_RESULT_INPUT_NACK_LIST_INVALID == result );
+
+    /* nackListSsrcOnly Packet parsing */
+    memset( &nackPacket,
+            0x00,
+            sizeof( RtcpNackPacket_t ) );
+    result = Rtcp_ParseNackPacket( &ctx,
+                                   &( nackListSsrcOnly[0] ),
+                                   sizeof( nackListSsrcOnly ),
+                                   &nackPacket );
+    assert( RTCP_RESULT_OK == result );
+    assert( nackPacket.ssrcSender == 0x2cd1a0de );
+    assert( nackPacket.ssrcSource == 0x0000abe0 );
+
+    /* singlePID Packet parsing */
+    memset( &nackPacket,
+            0x00,
+            sizeof( RtcpNackPacket_t ) );
+    result = Rtcp_ParseNackPacket( &ctx,
+                                   &( singlePID[0] ),
+                                   sizeof( singlePID ),
+                                   &nackPacket );
+    assert( RTCP_RESULT_OK == result );
+    assert( nackPacket.seqNumListLength == 1 );
+
+    nackPacket.pSeqNumList = malloc( nackPacket.seqNumListLength * sizeof( uint16_t ) );
+    result = Rtcp_ParseNackPacket( &ctx,
+                                   &( singlePID[0] ),
+                                   sizeof( singlePID ),
+                                   &nackPacket );
+    assert( RTCP_RESULT_OK == result );
+    assert( nackPacket.pSeqNumList[0] == 3240 );
+    free( nackPacket.pSeqNumList );
+
+    /* compound Packet parsing */
+    memset( &nackPacket,
+            0x00,
+            sizeof( RtcpNackPacket_t ) );
+    result = Rtcp_ParseNackPacket( &ctx,
+                                   &( compound[0] ),
+                                   sizeof( compound ),
+                                   &nackPacket );
+    assert( RTCP_RESULT_OK == result );
+    assert( nackPacket.seqNumListLength == 3 );
+
+    nackPacket.pSeqNumList = malloc( nackPacket.seqNumListLength * sizeof( uint16_t ) );
+    result = Rtcp_ParseNackPacket( &ctx,
+                                   &( compound[0] ),
+                                   sizeof( compound ),
+                                   &nackPacket );
+    assert( RTCP_RESULT_OK == result );
+    assert( nackPacket.pSeqNumList[0] == 3240 );
+    assert( nackPacket.pSeqNumList[1] == 3327 );
+    assert( nackPacket.pSeqNumList[2] == 3329 );
+    free( nackPacket.pSeqNumList );
+}
+/*-----------------------------------------------------------*/
+
 void serialize_senderReport()
 {
     RtcpPacket_t rtcpPacket;
@@ -297,6 +391,7 @@ int main( void )
     deserialize_rembValueGet();
     deserialize_senderReport();
     deserialize_receiverReport();
+    deserialize_nackPacket();
 
     printf( "\nAll deserialize test PASS.\r\n" );
 

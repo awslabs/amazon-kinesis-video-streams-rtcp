@@ -409,3 +409,65 @@ RtcpResult_t Rtcp_ParseReceiverReport( RtcpContext_t * pCtx,
     return result;
 }
 /*-----------------------------------------------------------*/
+
+RtcpResult_t Rtcp_ParseNackPacket( RtcpContext_t * pCtx,
+                                   uint8_t * pPayload,
+                                   size_t paylaodLength,
+                                   RtcpNackPacket_t * pNackPacket )
+{
+    RtcpResult_t result = RTCP_RESULT_OK;
+    size_t currentIndex = 0, j;
+    uint16_t currentSeqNumber, BLP, seqNumberCount = 0;
+
+    if( ( pCtx == NULL ) ||
+        ( pPayload == NULL ) ||
+        ( pNackPacket == NULL ) )
+    {
+        result = RTCP_RESULT_BAD_PARAM;
+    }
+
+    if( result == RTCP_RESULT_OK )
+    {
+        if( ( paylaodLength < RTCP_NACK_REPORT_MIN_LENGTH ) ||
+            ( paylaodLength % 4 != 0 ) )
+        {
+            result = RTCP_RESULT_INPUT_NACK_LIST_INVALID;
+        }
+    }
+
+    if( result == RTCP_RESULT_OK )
+    {
+        pNackPacket->ssrcSender = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+        pNackPacket->ssrcSource = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+
+        for(; currentIndex < paylaodLength; currentIndex += 4 )
+        {
+            currentSeqNumber = RTCP_READ_UINT16( &( pPayload[ currentIndex ] ) );
+            BLP = RTCP_READ_UINT16( &( pPayload[ currentIndex + 2 ] ) );
+
+            if( ( pNackPacket->pSeqNumList != NULL ) && ( seqNumberCount <= pNackPacket->seqNumListLength ) )
+            {
+                pNackPacket->pSeqNumList[ seqNumberCount ] = currentSeqNumber;
+            }
+            seqNumberCount += 1;
+
+            for( j = 0; j < RTCP_BLP_BIT_COUNT; j++ )
+            {
+                if( ( BLP & ( 1 << j ) ) != 0 )
+                {
+                    if( ( pNackPacket->pSeqNumList != NULL ) && ( seqNumberCount <= pNackPacket->seqNumListLength ) )
+                    {
+                        pNackPacket->pSeqNumList[ seqNumberCount ] = currentSeqNumber + j + 1;
+                    }
+                    seqNumberCount += 1;
+                }
+            }
+        }
+        pNackPacket->seqNumListLength = seqNumberCount;
+    }
+
+    return result;
+}
+/*-----------------------------------------------------------*/
