@@ -330,6 +330,73 @@ void deserialize_nackPacket()
 }
 /*-----------------------------------------------------------*/
 
+void deserialize_twccPacket()
+{
+    RtcpPacket_t rtcpPacket;
+    RtcpContext_t ctx;
+    RtcpResult_t result;
+    RtcpTwccPacket_t twccPacket;
+
+    uint8_t twccpayloadTooSmall[] = { 0x00, 0x00 };
+    uint8_t twccpayload1[] = { 0x44, 0x87, 0xa9, 0xe7, 0x54, 0xb3, 0xe6, 0xfd,
+                               0x01, 0x81, 0x00, 0x01, 0x14, 0x7a, 0x75, 0xa6, 0x20, 0x01, 0xc8, 0x01 };
+    uint8_t twccpayload2[] = { 0x44, 0x87, 0xa9, 0xe7, 0x54, 0xb3, 0xe6, 0xfd,
+                               0x12, 0x67, 0x00, 0x08, 0x14, 0x85, 0x60, 0xa8, 0xd6, 0x65, 0x20, 0x01,
+                               0x6c, 0x00, 0xfd, 0x78, 0x04, 0x02, 0x90, 0x28, 0x00, 0x04, 0x00, 0x02 };
+    uint8_t twccpayload3[] = { 0x44, 0x87, 0xa9, 0xe7, 0x54, 0xb3, 0xe6, 0xfd,
+                               0x04, 0x02, 0x00, 0xe4, 0x14, 0x7c, 0x9f, 0x81, 0x20, 0x27, 0x00, 0xb7,
+                               0xe6, 0x64, 0x90, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                               0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00 };
+    result = Rtcp_Init( &ctx );
+    assert( RTCP_RESULT_OK == result );
+
+    /* twccpayloadTooSmall Packet parsing */
+    memset( &twccPacket,
+            0x00,
+            sizeof( RtcpTwccPacket_t ) );
+
+    result = Rtcp_ParseTwccPacket( &ctx,
+                                   &( twccpayloadTooSmall[0] ),
+                                   sizeof( twccpayloadTooSmall ),
+                                   &twccPacket );
+    assert( RTCP_RESULT_INPUT_TWCCK_PACKET_INVALID == result );
+
+    /* twccpayload2 Packet parsing */
+    memset( &twccPacket,
+            0x00,
+            sizeof( RtcpTwccPacket_t ) );
+
+    result = Rtcp_ParseTwccPacket( &ctx,
+                                   &( twccpayload2[0] ),
+                                   sizeof( twccpayload2 ),
+                                   &twccPacket );
+    assert( RTCP_RESULT_OK == result );
+    assert( twccPacket.baseSeqNum == 0x1267 );
+    assert( twccPacket.packetStatusCount == 8 );
+    assert( twccPacket.referenceTime == 0x148560 );
+    assert( twccPacket.feedbackPacketCount == 0xa8 );
+    assert( twccPacket.pPacketChunkStart == &( twccpayload2[16] ) );
+    assert( twccPacket.pRecvDeltaStart == &( twccpayload2[20] ) );
+
+    /* twccpayload3 Packet parsing */
+    memset( &twccPacket,
+            0x00,
+            sizeof( RtcpTwccPacket_t ) );
+
+    result = Rtcp_ParseTwccPacket( &ctx,
+                                   &( twccpayload3[0] ),
+                                   sizeof( twccpayload3 ),
+                                   &twccPacket );
+    assert( RTCP_RESULT_OK == result );
+    assert( twccPacket.baseSeqNum == 0x402 );
+    assert( twccPacket.packetStatusCount == 0xe4 );
+    assert( twccPacket.referenceTime == 0x147c9f );
+    assert( twccPacket.feedbackPacketCount == 0x81 );
+    assert( twccPacket.pPacketChunkStart == &( twccpayload3[16] ) );
+    assert( twccPacket.pRecvDeltaStart == &( twccpayload3[22] ) );
+}
+/*-----------------------------------------------------------*/
+
 void serialize_senderReport()
 {
     RtcpPacket_t rtcpPacket;
@@ -392,6 +459,7 @@ int main( void )
     deserialize_senderReport();
     deserialize_receiverReport();
     deserialize_nackPacket();
+    deserialize_twccPacket();
 
     printf( "\nAll deserialize test PASS.\r\n" );
 

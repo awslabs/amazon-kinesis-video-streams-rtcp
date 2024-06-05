@@ -32,6 +32,17 @@
 #define RTCP_FRACTION_LOST_BITMASK              0xFF000000
 #define RTCP_REMB_PACKET_LOST_BITMASK           0x00FFFFFF
 
+#define RTCP_REMB_REFERENCE_TIME_LOCATION       8
+#define RTCP_REMB_REFERENCE_TIME_BITMASK        0xFFFFFF00
+#define RTCP_FEEDBACK_PACKET_COUNT_BITMASK      0x000000FF
+
+#define RTCP_RUN_LENGTH_STATUS_BITMASK          0x1FFF
+#define RTCP_VECTOR_SYMBOL_SIZE_BITMASK         0x4000
+#define RTCP_VECTOR_SYMBOL_SIZE_LOCATION        15
+#define RTCP_PACKET_CHUNK_TYPE_LOCATION         15
+#define RTCP_PACKET_CHUNK_TYPE_BITMASK          0x8000
+#define CHUNK_TYPE( packetChunk )               ( ( packetChunk & RTCP_PACKET_CHUNK_TYPE_BITMASK ) >> RTCP_PACKET_CHUNK_TYPE_LOCATION )
+
 #define RTCP_PACKET_LEN_WORD_SIZE               4
 
 /*-----------------------------------------------------------*/
@@ -466,6 +477,79 @@ RtcpResult_t Rtcp_ParseNackPacket( RtcpContext_t * pCtx,
             }
         }
         pNackPacket->seqNumListLength = seqNumberCount;
+    }
+
+    return result;
+}
+/*-----------------------------------------------------------*/
+
+RtcpResult_t Rtcp_ParseTwccPacket( RtcpContext_t * pCtx,
+                                   uint8_t * pPayload,
+                                   size_t paylaodLength,
+                                   RtcpTwccPacket_t * pTwccPacket )
+{
+    RtcpResult_t result = RTCP_RESULT_OK;
+    uint8_t symbolSize;
+    size_t currentIndex = 0;
+    uint32_t word;
+    uint16_t packetChunk;
+    uint32_t packetsToParse = 0;
+    uint32_t statusVectorCount, runLengthChunkPackets;
+
+    if( ( pCtx == NULL ) ||
+        ( pPayload == NULL ) ||
+        ( pTwccPacket == NULL ) )
+    {
+        result = RTCP_RESULT_BAD_PARAM;
+    }
+
+    if( paylaodLength < RTCP_TWCC_REPORT_MIN_LENGTH )
+    {
+        result = RTCP_RESULT_INPUT_TWCCK_PACKET_INVALID;
+    }
+
+    if( result == RTCP_RESULT_OK )
+    {
+        pTwccPacket->ssrcSender = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+        pTwccPacket->ssrcSource = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        currentIndex += 4;
+
+        pTwccPacket->baseSeqNum = RTCP_READ_UINT16( &( pPayload[ currentIndex ] ) );
+        currentIndex += 2;
+        pTwccPacket->packetStatusCount = RTCP_READ_UINT16( &( pPayload[ currentIndex ] ) );
+        currentIndex += 2;
+
+        word = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
+        pTwccPacket->referenceTime = ( word & RTCP_REMB_REFERENCE_TIME_BITMASK ) >> RTCP_REMB_REFERENCE_TIME_LOCATION;
+        pTwccPacket->feedbackPacketCount = word & RTCP_FEEDBACK_PACKET_COUNT_BITMASK;
+        currentIndex += 4;
+
+        pTwccPacket->pPacketChunkStart = &( pPayload[ currentIndex ] );
+        packetsToParse = pTwccPacket->packetStatusCount;
+
+        while( packetsToParse > 0 &&
+               currentIndex < paylaodLength )
+        {
+            packetChunk = RTCP_READ_UINT16( &( pPayload[ currentIndex ] ) );
+            if( CHUNK_TYPE( packetChunk ) == RTCP_TWCC_RUN_LENGTH_CHUNK )
+            {
+                runLengthChunkPackets = ( packetChunk & RTCP_RUN_LENGTH_STATUS_BITMASK );
+                packetsToParse -= runLengthChunkPackets;
+            }
+            else
+            {
+                symbolSize = ( packetChunk & RTCP_VECTOR_SYMBOL_SIZE_BITMASK ) >> RTCP_VECTOR_SYMBOL_SIZE_LOCATION;
+                statusVectorCount = ( symbolSize == 1 ) ? 14 : 7;
+                packetsToParse -= ( packetsToParse < statusVectorCount ) ? packetsToParse : statusVectorCount;
+            }
+            currentIndex += RTCP_TWCC_PACKET_CHUNK_SIZE;
+        }
+
+        if( currentIndex < paylaodLength )
+        {
+            pTwccPacket->pRecvDeltaStart = &( pPayload[ currentIndex ] );
+        }
     }
 
     return result;

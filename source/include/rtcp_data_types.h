@@ -8,16 +8,6 @@
 /* Endianness includes. */
 #include "rtcp_endianness.h"
 
-//MAP HERE -
-// #define STATUS_RTCP_INPUT_PACKET_TOO_SMALL
-// #define STATUS_RTCP_INPUT_PACKET_INVALID_VERSION
-// #define STATUS_RTCP_INPUT_PACKET_LEN_MISMATCH
-// #define STATUS_RTCP_INPUT_NACK_LIST_INVALID
-// #define STATUS_RTCP_INPUT_SSRC_INVALID
-// #define STATUS_RTCP_INPUT_PARTIAL_PACKET  =  RTP_RESULT_MALFORMED_PACKET
-// #define STATUS_RTCP_INPUT_REMB_TOO_SMALL
-// #define STATUS_RTCP_INPUT_REMB_INVALID
-
 #define RTCP_HEADER_LENGTH                      4
 #define RTCP_HEADER_VERSION                     2
 
@@ -52,6 +42,9 @@
 
 #define RTCP_NACK_REPORT_MIN_LENGTH             8
 #define RTCP_BLP_BIT_COUNT                      16
+
+#define RTCP_TWCC_REPORT_MIN_LENGTH             18
+#define RTCP_TWCC_PACKET_CHUNK_SIZE              2
 /*-----------------------------------------------------------*/
 typedef enum RtcpResult
 {
@@ -62,6 +55,7 @@ typedef enum RtcpResult
     RTCP_RESULT_MALFORMED_PACKET,
     RTCP_RESULT_INPUT_REMB_INVALID,
     RTCP_RESULT_INPUT_NACK_LIST_INVALID,
+    RTCP_RESULT_INPUT_TWCCK_PACKET_INVALID,
     RTCP_RESULT_BUFFER_NOT_IN_RANGE
 } RtcpResult_t;
 
@@ -75,6 +69,10 @@ typedef enum {
     RTCP_PACKET_TYPE_PAYLOAD_SPECIFIC_FEEDBACK = 206,
 } RTCP_PACKET_TYPE;
 
+typedef enum {
+    RTCP_TWCC_RUN_LENGTH_CHUNK,
+    RTCP_TWCC_STATUS_VECTOR_CHUNK
+} RTCP_TWCC_CHUNK_TYPE;
 /*-----------------------------------------------------------*/
 
 typedef struct RtcpContext
@@ -183,6 +181,18 @@ typedef struct RtcpNackPacket
     uint32_t seqNumListLength;
     uint16_t * pSeqNumList;
 } RtcpNackPacket_t;
+
+typedef struct RtcpTwccPacket
+{
+    uint32_t ssrcSender;
+    uint32_t ssrcSource;
+    uint16_t baseSeqNum;
+    uint16_t packetStatusCount;
+    uint32_t referenceTime;
+    uint8_t feedbackPacketCount;
+    uint8_t * pPacketChunkStart;
+    uint8_t * pRecvDeltaStart;
+} RtcpTwccPacket_t;
 
 /*-----------------------------------------------------------*/
 

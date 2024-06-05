@@ -58,4 +58,8 @@ RtcpResult_t Rtcp_ParseNackPacket( RtcpContext_t * pCtx,
                                    size_t paylaodLength,
                                    RtcpNackPacket_t * pNackPacket );
 
+RtcpResult_t Rtcp_ParseTwccPacket( RtcpContext_t * pCtx,
+                                   uint8_t * pPayload,
+                                   size_t paylaodLength,
+                                   RtcpTwccPacket_t * pTwccPacket );
 #endif /* RTCP_API_H */
