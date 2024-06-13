@@ -36,13 +36,6 @@
 #define RTCP_REMB_REFERENCE_TIME_BITMASK        0xFFFFFF00
 #define RTCP_FEEDBACK_PACKET_COUNT_BITMASK      0x000000FF
 
-#define RTCP_RUN_LENGTH_STATUS_BITMASK          0x1FFF
-#define RTCP_VECTOR_SYMBOL_SIZE_BITMASK         0x4000
-#define RTCP_VECTOR_SYMBOL_SIZE_LOCATION        15
-#define RTCP_PACKET_CHUNK_TYPE_LOCATION         15
-#define RTCP_PACKET_CHUNK_TYPE_BITMASK          0x8000
-#define CHUNK_TYPE( packetChunk )               ( ( packetChunk & RTCP_PACKET_CHUNK_TYPE_BITMASK ) >> RTCP_PACKET_CHUNK_TYPE_LOCATION )
-
 #define RTCP_PACKET_LEN_WORD_SIZE               4
 
 /*-----------------------------------------------------------*/
@@ -505,7 +498,7 @@ RtcpResult_t Rtcp_ParseTwccPacket( RtcpContext_t * pCtx,
 
     if( paylaodLength < RTCP_TWCC_REPORT_MIN_LENGTH )
     {
-        result = RTCP_RESULT_INPUT_TWCCK_PACKET_INVALID;
+        result = RTCP_RESULT_TWCC_INPUT_PACKET_INVALID;
     }
 
     if( result == RTCP_RESULT_OK )
@@ -534,7 +527,7 @@ RtcpResult_t Rtcp_ParseTwccPacket( RtcpContext_t * pCtx,
             packetChunk = RTCP_READ_UINT16( &( pPayload[ currentIndex ] ) );
             if( CHUNK_TYPE( packetChunk ) == RTCP_TWCC_RUN_LENGTH_CHUNK )
             {
-                runLengthChunkPackets = ( packetChunk & RTCP_RUN_LENGTH_STATUS_BITMASK );
+                runLengthChunkPackets = ( packetChunk & RTCP_RUN_LENGTH_BITMASK );
                 packetsToParse -= runLengthChunkPackets;
             }
             else

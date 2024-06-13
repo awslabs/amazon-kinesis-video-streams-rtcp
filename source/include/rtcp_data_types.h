@@ -44,7 +44,16 @@
 #define RTCP_BLP_BIT_COUNT                      16
 
 #define RTCP_TWCC_REPORT_MIN_LENGTH             18
-#define RTCP_TWCC_PACKET_CHUNK_SIZE              2
+#define RTCP_TWCC_PACKET_CHUNK_SIZE             2
+#define RTCP_RUN_LENGTH_STATUS_SYMBOL_BITMASK   0x6000
+#define RTCP_RUN_LENGTH_STATUS_SYMBOL_LOCATION  13
+#define RTCP_RUN_LENGTH_BITMASK                 0x1FFF
+#define RTCP_VECTOR_SYMBOL_SIZE_BITMASK         0x4000
+#define RTCP_VECTOR_SYMBOL_SIZE_LOCATION        15
+#define RTCP_PACKET_CHUNK_TYPE_BITMASK          0x8000
+#define RTCP_PACKET_CHUNK_TYPE_LOCATION         15
+#define CHUNK_TYPE( packetChunk )               ( ( packetChunk & RTCP_PACKET_CHUNK_TYPE_BITMASK ) >> RTCP_PACKET_CHUNK_TYPE_LOCATION )
+
 /*-----------------------------------------------------------*/
 typedef enum RtcpResult
 {
@@ -55,7 +64,9 @@ typedef enum RtcpResult
     RTCP_RESULT_MALFORMED_PACKET,
     RTCP_RESULT_INPUT_REMB_INVALID,
     RTCP_RESULT_INPUT_NACK_LIST_INVALID,
-    RTCP_RESULT_INPUT_TWCCK_PACKET_INVALID,
+    RTCP_RESULT_TWCC_INPUT_PACKET_INVALID,
+    RTCP_RESULT_TWCC_NO_PACKET_FOUND,
+    RTCP_RESULT_TWCC_BUFFER_EMPTY,
     RTCP_RESULT_BUFFER_NOT_IN_RANGE
 } RtcpResult_t;
 
@@ -73,6 +84,13 @@ typedef enum {
     RTCP_TWCC_RUN_LENGTH_CHUNK,
     RTCP_TWCC_STATUS_VECTOR_CHUNK
 } RTCP_TWCC_CHUNK_TYPE;
+
+
+typedef enum {
+    RTCP_TWCC_STATUS_SYMBOL_NOTRECEIVED = 0,
+    RTCP_TWCC_STATUS_SYMBOL_SMALLDELTA,
+    RTCP_TWCC_STATUS_SYMBOL_LARGEDELTA,
+} RTCP_TWCC_STATUS_SYMBOL;
 /*-----------------------------------------------------------*/
 
 typedef struct RtcpContext
