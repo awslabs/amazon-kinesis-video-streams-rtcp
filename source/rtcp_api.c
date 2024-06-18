@@ -58,7 +58,7 @@ static RtcpResult_t Rtcp_GetMediaSSRC( RtcpContext_t * pCtx,
     if( result == RTCP_RESULT_OK )
     {
         RTCP_WRITE_UINT32( &( pPayload[ currentIndex + sizeof( uint32_t ) ] ),
-                           *pMediaSSRC );
+                           * pMediaSSRC );
     }
 
     return result;
@@ -154,7 +154,7 @@ RtcpResult_t Rtcp_Serialize( RtcpContext_t * pCtx,
         ( pRtcpPacket == NULL ) ||
         ( pLength == NULL ) ||
         ( ( pLength != NULL ) &&
-          ( *pLength < RTCP_HEADER_LENGTH ) ) )
+          ( * pLength < RTCP_HEADER_LENGTH ) ) )
     {
         result = RTCP_RESULT_BAD_PARAM;
     }
@@ -181,7 +181,7 @@ RtcpResult_t Rtcp_Serialize( RtcpContext_t * pCtx,
                     pRtcpPacket->payloadLength );
             currentIndex += pRtcpPacket->payloadLength;
         }
-        *pLength = currentIndex;
+        * pLength = currentIndex;
     }
 
     return result;
@@ -367,6 +367,12 @@ RtcpResult_t Rtcp_ParseSenderReport( RtcpContext_t * pCtx,
         currentIndex += 4;
     }
 
+
+    if( currentIndex < paylaodLength )
+    {
+        result = RTCP_RESULT_CONTAIN_RECEIVER_REPORT;
+    }
+
     return result;
 }
 /*-----------------------------------------------------------*/
@@ -408,6 +414,11 @@ RtcpResult_t Rtcp_ParseReceiverReport( RtcpContext_t * pCtx,
         currentIndex += 4;
         pReceiverReport->delaySinceLastSR = RTCP_READ_UINT32( &( pPayload[ currentIndex ] ) );
         currentIndex += 4;
+    }
+
+    if( currentIndex < paylaodLength )
+    {
+        result = RTCP_RESULT_CONTAIN_RECEIVER_REPORT;
     }
 
     return result;

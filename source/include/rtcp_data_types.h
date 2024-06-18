@@ -64,6 +64,7 @@ typedef enum RtcpResult
     RTCP_RESULT_MALFORMED_PACKET,
     RTCP_RESULT_INPUT_REMB_INVALID,
     RTCP_RESULT_INPUT_NACK_LIST_INVALID,
+    RTCP_RESULT_CONTAIN_RECEIVER_REPORT,  /* It indicated that the Receiver report or Sender report contains more reciever report information */
     RTCP_RESULT_TWCC_INPUT_PACKET_INVALID,
     RTCP_RESULT_TWCC_NO_PACKET_FOUND,
     RTCP_RESULT_TWCC_BUFFER_EMPTY,
