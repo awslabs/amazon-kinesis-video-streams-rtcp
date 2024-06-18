@@ -222,7 +222,7 @@ RtcpResult_t RtcpTwcc_ExtractPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
 
 /*-----------------------------------------------------------*/
 
-/* Remove all the packets older than a nanosecond. */
+/* Remove all the packets older than a second. */
 RtcpResult_t RtcpTwcc_OlderPacketInfoDeletion( RtcpTwccManagerCtx_t * pTwccCtx,
                                                uint64_t currentPacketSentTime,
                                                uint16_t seqNumber )
