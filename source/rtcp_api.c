@@ -57,8 +57,7 @@ static RtcpResult_t Rtcp_GetMediaSSRC( RtcpContext_t * pCtx,
 
     if( result == RTCP_RESULT_OK )
     {
-        RTCP_WRITE_UINT32( &( pPayload[ currentIndex + sizeof( uint32_t ) ] ),
-                           * pMediaSSRC );
+        * pMediaSSRC = RTCP_READ_UINT32( &( pPayload[ currentIndex + sizeof( uint32_t ) ] ) );
     }
 
     return result;
@@ -95,10 +94,14 @@ RtcpResult_t Rtcp_DeSerialize( RtcpContext_t * pCtx,
 
     if( ( pCtx == NULL ) ||
         ( pSerializedPacket == NULL ) ||
-        ( serializedPacketLength < RTCP_HEADER_LENGTH ) ||
         ( pRtcpPacket == NULL ) )
     {
         result = RTCP_RESULT_BAD_PARAM;
+    }
+
+    if( serializedPacketLength < RTCP_HEADER_LENGTH )
+    {
+        result = RTCP_RESULT_MALFORMED_PACKET;
     }
 
     if( result == RTCP_RESULT_OK )
@@ -152,11 +155,15 @@ RtcpResult_t Rtcp_Serialize( RtcpContext_t * pCtx,
 
     if( ( pCtx == NULL ) ||
         ( pRtcpPacket == NULL ) ||
-        ( pLength == NULL ) ||
-        ( ( pLength != NULL ) &&
-          ( * pLength < RTCP_HEADER_LENGTH ) ) )
+        ( pLength == NULL ) )
     {
         result = RTCP_RESULT_BAD_PARAM;
+    }
+
+    if( ( pLength != NULL ) &&
+        ( * pLength < RTCP_HEADER_LENGTH ) )
+    {
+        result = RTCP_RESULT_MALFORMED_PACKET;
     }
 
     if( result == RTCP_RESULT_OK )
@@ -314,12 +321,12 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
     {
         word = RTCP_READ_UINT32( &( pPayload[ RTCP_REMB_IDENTIFIER_OFFSET + 4 ] ) );
 
-        *pSsrcListLength = ( ( word & RTCP_REMB_PACKET_SSRC_LEN_BITMASK ) >> RTCP_REMB_PACKET_SSRC_LEN_LOCATION );
-        rembPayloadSize += ( *pSsrcListLength ) * sizeof( uint32_t );
+        * pSsrcListLength = ( ( word & RTCP_REMB_PACKET_SSRC_LEN_BITMASK ) >> RTCP_REMB_PACKET_SSRC_LEN_LOCATION );
+        rembPayloadSize += ( * pSsrcListLength ) * sizeof( uint32_t );
 
         exponent = ( ( word & RTCP_REMB_PACKET_EXPONENT_BITMASK ) >> RTCP_REMB_PACKET_EXPONENT_LOCATION );
         mantissa = ( word & RTCP_REMB_PACKET_MANTISSA_BITMASK );
-        *pBitRate = mantissa << exponent;
+        * pBitRate = mantissa << exponent;
 
         if( paylaodLength < rembPayloadSize )
         {
@@ -328,9 +335,9 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
     }
 
     if( ( result == RTCP_RESULT_OK ) &&
-        ( *pSsrcListLength != 0 ) )
+        ( * pSsrcListLength != 0 ) )
     {
-        *ppSsrcList = ( uint32_t * ) &( pPayload[ RTCP_REMB_SSRC_LIST_OFFSET ] );
+        * ppSsrcList = ( uint32_t * ) &( pPayload[ RTCP_REMB_SSRC_LIST_OFFSET ] );
     }
 
     return result;
