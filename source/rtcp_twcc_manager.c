@@ -78,7 +78,7 @@ RtcpResult_t RtcpTwcc_AddPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
             pTwccPacketInfo = &( pTwccCtx->pTwccPktInfoArray[ pTwccCtx->readIndex ] );
             memset( pTwccPacketInfo,
                     0,
-                    sizeof( pTwccPacketInfo ) );
+                    sizeof( TwccPacketInfo_t ) );
             pTwccCtx->readIndex = INC_READ_INDEX( pTwccCtx );
         }
 
@@ -139,7 +139,6 @@ RtcpResult_t RtcpTwcc_GetSeqNum_PacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
                                             uint16_t seqNum )
 {
     RtcpResult_t result = RTCP_RESULT_OK;
-    TwccPacketInfo_t * pReadTwccPacketInfo;
     size_t i;
 
     if( ( pTwccCtx == NULL ) ||
@@ -254,7 +253,7 @@ RtcpResult_t RtcpTwcc_OlderPacketInfoDeletion( RtcpTwccManagerCtx_t * pTwccCtx,
                 {
                     memset( pTwccPacketInfo,
                             0,
-                            sizeof( pTwccPacketInfo ) );
+                            sizeof( TwccPacketInfo_t ) );
                     pTwccCtx->readIndex = INC_READ_INDEX( pTwccCtx );
                 }
                 else {
@@ -280,7 +279,7 @@ RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
                                       RtcpTwccPacket_t * rtcpTwccPacket )
 {
     RtcpResult_t result = RTCP_RESULT_OK;
-    TwccPacketInfo_t * pTwccPacketInfo;
+    TwccPacketInfo_t twccPacketInfo;
     size_t packetsRemaining;
     uint8_t statusSymbol, symbolSize;
     uint16_t startSeqNum, recvDelta;
@@ -311,7 +310,7 @@ RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
                 runLengthChunkPackets = ( packetChunk & RTCP_RUN_LENGTH_BITMASK );
                 statusSymbol = ( packetChunk & RTCP_RUN_LENGTH_STATUS_SYMBOL_BITMASK ) >> RTCP_RUN_LENGTH_STATUS_SYMBOL_LOCATION;
                 result = RtcpTwcc_GetSeqNum_PacketInfo( pTwccCtx,
-                                                        pTwccPacketInfo,
+                                                        &twccPacketInfo,
                                                         startSeqNum );
                 for( i = 0; i < runLengthChunkPackets; i++ )
                 {
@@ -325,7 +324,7 @@ RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
                                                                     RTCP_HUNDREDS_OF_NANOS_IN_A_SECOND );
                             if( result == RTCP_RESULT_OK )
                             {
-                                pTwccPacketInfo->remoteTimeKvs = referenceTime;
+                                twccPacketInfo.remoteTimeKvs = referenceTime;
                             }
                             pTwccCtx->lastReportedSeqNum = startSeqNum;
                             break;
@@ -338,7 +337,7 @@ RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
                                                                     RTCP_HUNDREDS_OF_NANOS_IN_A_SECOND );
                             if( result == RTCP_RESULT_OK )
                             {
-                                pTwccPacketInfo->remoteTimeKvs = referenceTime;
+                                twccPacketInfo.remoteTimeKvs = referenceTime;
                             }
                             pTwccCtx->lastReportedSeqNum = startSeqNum;
                             break;
@@ -346,7 +345,7 @@ RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
                         case RTCP_TWCC_STATUS_SYMBOL_NOTRECEIVED:
                             if( result == RTCP_RESULT_OK )
                             {
-                                pTwccPacketInfo->remoteTimeKvs = RTCP_TWCC_PACKET_LOST_TIME;
+                                twccPacketInfo.remoteTimeKvs = RTCP_TWCC_PACKET_LOST_TIME;
                             }
                             pTwccCtx->lastReportedSeqNum = startSeqNum;
                             break;
@@ -371,7 +370,7 @@ RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
                     statusSymbol = ( packetChunk >> RTCP_VECTOR_SYMBOL_BITMASK( i,
                                                                                 symbolSize ) ) & RTCP_VECTOR_SYMBOL_LOCATION( symbolSize );
                     result = RtcpTwcc_GetSeqNum_PacketInfo( pTwccCtx,
-                                                            pTwccPacketInfo,
+                                                            &twccPacketInfo,
                                                             startSeqNum );
                     switch( statusSymbol )
                     {
@@ -383,7 +382,7 @@ RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
                                                                     RTCP_HUNDREDS_OF_NANOS_IN_A_SECOND );
                             if( result == RTCP_RESULT_OK )
                             {
-                                pTwccPacketInfo->remoteTimeKvs = referenceTime;
+                                twccPacketInfo.remoteTimeKvs = referenceTime;
                             }
                             pTwccCtx->lastReportedSeqNum = startSeqNum;
                             break;
@@ -396,7 +395,7 @@ RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
                                                                     RTCP_HUNDREDS_OF_NANOS_IN_A_SECOND );
                             if( result == RTCP_RESULT_OK )
                             {
-                                pTwccPacketInfo->remoteTimeKvs = referenceTime;
+                                twccPacketInfo.remoteTimeKvs = referenceTime;
                             }
                             pTwccCtx->lastReportedSeqNum = startSeqNum;
                             break;
@@ -404,7 +403,7 @@ RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
                         case RTCP_TWCC_STATUS_SYMBOL_NOTRECEIVED:
                             if( result == RTCP_RESULT_OK )
                             {
-                                pTwccPacketInfo->remoteTimeKvs = RTCP_TWCC_PACKET_LOST_TIME;
+                                twccPacketInfo.remoteTimeKvs = RTCP_TWCC_PACKET_LOST_TIME;
                             }
                             pTwccCtx->lastReportedSeqNum = startSeqNum;
                             break;
@@ -434,8 +433,6 @@ RtcpResult_t RtcpTwcc_GetBandwidthParameters( RtcpTwccManagerCtx_t * pTwccCtx,
 {
     RtcpResult_t result = RTCP_RESULT_OK;
     TwccPacketInfo_t twccPacketInfo;
-    RtcpTwccPacket_t rtcpTwccPacket;
-    size_t i;
     uint16_t baseSeqNum = 0, seqNum;
     uint64_t localStartTimeKvs, localEndTimeKvs;
 
@@ -471,8 +468,8 @@ RtcpResult_t RtcpTwcc_GetBandwidthParameters( RtcpTwccManagerCtx_t * pTwccCtx,
                 break;
             }
 
-            WRAP( ( seqNum + 1 ),
-                  pTwccCtx->twccPacketInfoArrayLength );
+            seqNum = WRAP( ( seqNum + 1 ),
+                           pTwccCtx->twccPacketInfoArrayLength );
 
             if( localStartTimeKvs == RTCP_TWCC_PACKET_UNITIALIZED_TIME )
             {

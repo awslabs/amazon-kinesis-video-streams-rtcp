@@ -294,7 +294,7 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
     const uint8_t rembUniqueIdentifier[] = { 0x52, 0x45, 0x4d, 0x42 };
     uint32_t rembIdentifierRead, rembIdentifier;
     uint32_t word = 0;
-    size_t rembPayloadSize = RTCP_REMB_MIN_PAYLOAD_SIZE, i;
+    size_t rembPayloadSize = RTCP_REMB_MIN_PAYLOAD_SIZE;
 
     if( ( pCtx == NULL ) ||
         ( pPayload == NULL ) ||
