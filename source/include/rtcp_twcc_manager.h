@@ -7,6 +7,7 @@
 
 /* API includes. */
 #include "rtcp_data_types.h"
+#include "rtcp_endianness.h"
 
 #define RTCP_TWCC_PACKET_UNITIALIZED_TIME                   0
 #define RTCP_TWCC_PACKET_LOST_TIME                          ( ( uint64_t ) ( -1LL ) )

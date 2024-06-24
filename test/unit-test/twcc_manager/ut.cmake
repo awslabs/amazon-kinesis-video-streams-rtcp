@@ -28,6 +28,8 @@ list(APPEND mock_define_list
 # List the files you would like to test here.
 list(APPEND real_source_files
             ${MODULE_ROOT_DIR}/source/rtcp_twcc_manager.c
+            ${MODULE_ROOT_DIR}/source/rtcp_api.c
+            ${MODULE_ROOT_DIR}/source/rtcp_endianness.c
         )
 # List the directories the module under test includes.
 list(APPEND real_include_directories
