@@ -40,8 +40,9 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
                                    uint8_t * pPayload,
                                    size_t paylaodLength,
                                    size_t * pSsrcListLength,
-                                   uint32_t ** pSsrcList,
-                                   uint64_t * pBitRate );
+                                   uint32_t ** ppSsrcList,
+                                   uint32_t * pMantissa,
+                                   uint8_t * pExponent );
 
 RtcpResult_t Rtcp_ParseSenderReport( RtcpContext_t * pCtx,
                                      uint8_t * pPayload,

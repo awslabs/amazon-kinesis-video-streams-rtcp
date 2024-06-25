@@ -287,13 +287,13 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
                                    size_t paylaodLength,
                                    size_t * pSsrcListLength,
                                    uint32_t ** ppSsrcList,
-                                   uint64_t * pBitRate )
+                                   uint32_t * pMantissa,
+                                   uint8_t * pExponent )
 {
     RtcpResult_t result = RTCP_RESULT_OK;
     const uint8_t rembUniqueIdentifier[] = { 0x52, 0x45, 0x4d, 0x42 };
     uint32_t rembIdentifierRead, rembIdentifier;
-    uint32_t word = 0, mantissa = 0;
-    uint8_t exponent = 0;
+    uint32_t word = 0;
     size_t rembPayloadSize = RTCP_REMB_MIN_PAYLOAD_SIZE, i;
 
     if( ( pCtx == NULL ) ||
@@ -324,9 +324,8 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
         * pSsrcListLength = ( ( word & RTCP_REMB_PACKET_SSRC_LEN_BITMASK ) >> RTCP_REMB_PACKET_SSRC_LEN_LOCATION );
         rembPayloadSize += ( * pSsrcListLength ) * sizeof( uint32_t );
 
-        exponent = ( ( word & RTCP_REMB_PACKET_EXPONENT_BITMASK ) >> RTCP_REMB_PACKET_EXPONENT_LOCATION );
-        mantissa = ( word & RTCP_REMB_PACKET_MANTISSA_BITMASK );
-        * pBitRate = mantissa << exponent;
+        * pExponent = ( ( word & RTCP_REMB_PACKET_EXPONENT_BITMASK ) >> RTCP_REMB_PACKET_EXPONENT_LOCATION );
+        * pMantissa = ( word & RTCP_REMB_PACKET_MANTISSA_BITMASK );
 
         if( paylaodLength < rembPayloadSize )
         {

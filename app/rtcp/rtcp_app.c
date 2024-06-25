@@ -28,7 +28,7 @@ static void deserialize_test1( void )
                                headerTooSmall,
                                sizeof( headerTooSmall ),
                                &rtcpPacket );
-    assert( RTCP_RESULT_BAD_PARAM == result );
+    assert( RTCP_RESULT_MALFORMED_PACKET == result );
 
     // Assert that we check version field
     uint8_t invalidVersionValue[] = {0x01, 0xcd, 0x00, 0x03, 0x2c, 0xd1, 0xa0, 0xde, 0x00, 0x00, 0xab, 0xe0, 0x00, 0xa4, 0x00, 0x00};
@@ -111,7 +111,9 @@ void deserialize_rembValueGet()
     RtcpContext_t ctx;
     RtcpResult_t result;
     size_t ssrcListLen = 0;
-    uint64_t maximumBitRate = 0;
+    uint32_t mantissa;
+    uint8_t exponent;
+    double maximumBitRate = 0;
     uint32_t * pSsrcList1, * pSsrcList2;
     uint8_t bufferNoUniqueIdentifier[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
@@ -133,7 +135,8 @@ void deserialize_rembValueGet()
                                    sizeof( bufferNoUniqueIdentifier ),
                                    &ssrcListLen,
                                    &pSsrcList1,
-                                   &maximumBitRate );
+                                   &mantissa,
+                                   &exponent );
     assert( result == RTCP_RESULT_INPUT_REMB_INVALID );
 
     result = Rtcp_ParseRembPacket( &ctx,
@@ -141,11 +144,13 @@ void deserialize_rembValueGet()
                                    sizeof( singleSSRC ),
                                    &ssrcListLen,
                                    &pSsrcList1,
-                                   &maximumBitRate );
+                                   &mantissa,
+                                   &exponent );
 
+    maximumBitRate = mantissa << exponent;
     assert( RTCP_RESULT_OK == RTCP_RESULT_OK );
     assert( ssrcListLen == 1 );
-    assert( maximumBitRate == 2581120 );
+    assert( maximumBitRate == 2581120.0 );
     assert( RTCP_READ_UINT32( ( uint8_t * )&( pSsrcList1[0] ) ) == 0x6c76e855 );
 
     result = Rtcp_ParseRembPacket( &ctx,
@@ -153,10 +158,12 @@ void deserialize_rembValueGet()
                                    sizeof( multipleSSRC ),
                                    &ssrcListLen,
                                    &pSsrcList2,
-                                   &maximumBitRate );
+                                   &mantissa,
+                                   &exponent );
+    maximumBitRate = mantissa << exponent;
     assert( RTCP_RESULT_OK == RTCP_RESULT_OK );
     assert( ssrcListLen == 2 );
-    assert( maximumBitRate == 2581120 );
+    assert( maximumBitRate == 2581120.0 );
     assert( RTCP_READ_UINT32( ( uint8_t * )&( pSsrcList2[0] ) ) == 0x6c76e855 );
     assert( RTCP_READ_UINT32( ( uint8_t * )&( pSsrcList2[1] ) ) == 0x42424242 );
 
@@ -165,7 +172,8 @@ void deserialize_rembValueGet()
                                    sizeof( invalidSSRCLength ),
                                    &ssrcListLen,
                                    &pSsrcList2,
-                                   &maximumBitRate );
+                                   &mantissa,
+                                   &exponent );
     assert( RTCP_RESULT_INPUT_REMB_INVALID == result );
 }
 /*-----------------------------------------------------------*/
@@ -359,7 +367,7 @@ void deserialize_twccPacket()
                                    &( twccpayloadTooSmall[0] ),
                                    sizeof( twccpayloadTooSmall ),
                                    &twccPacket );
-    assert( RTCP_RESULT_INPUT_TWCCK_PACKET_INVALID == result );
+    assert( RTCP_RESULT_TWCC_INPUT_PACKET_INVALID == result );
 
     /* twccpayload2 Packet parsing */
     memset( &twccPacket,
