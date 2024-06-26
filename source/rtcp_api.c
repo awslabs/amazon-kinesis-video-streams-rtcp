@@ -549,8 +549,8 @@ RtcpResult_t Rtcp_ParseTwccPacket( RtcpContext_t * pCtx,
             }
             else
             {
-                symbolSize = ( packetChunk & RTCP_VECTOR_SYMBOL_SIZE_BITMASK ) >> RTCP_VECTOR_SYMBOL_SIZE_LOCATION;
-                statusVectorCount = ( symbolSize == 1 ) ? 14 : 7;
+                symbolSize = ( packetChunk & RTCP_PACKET_VECTOR_SYMBOL_SIZE_MASK ) ? 1 : 0;
+                statusVectorCount = ( symbolSize == 0 ) ? 14 : 7;
                 packetsToParse -= ( packetsToParse < statusVectorCount ) ? packetsToParse : statusVectorCount;
             }
             currentIndex += RTCP_TWCC_PACKET_CHUNK_SIZE;
