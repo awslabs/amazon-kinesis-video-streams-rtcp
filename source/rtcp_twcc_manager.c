@@ -22,10 +22,10 @@
           ( pTwccCtx )->twccPacketInfoArrayLength )
 
 #define IS_TWCC_BUFFER_FULL( pTwccCtx ) \
-    ( INC_WRITE_INDEX( pTwccCtx ) == ( pTwccCtx )->readIndex )
+    ( ( pTwccCtx )->count == ( pTwccCtx )->twccPacketInfoArrayLength )
 
 #define IS_TWCC_BUFFER_EMPTY( pTwccCtx ) \
-    ( ( pTwccCtx )->readIndex == ( pTwccCtx )->writeIndex )
+    ( ( pTwccCtx )->count == 0 )
 
 #define RTCP_READ_UINT16    ( pTwccCtx->readWriteFunctions.readUint16Fn )
 /*-----------------------------------------------------------*/
@@ -52,6 +52,7 @@ RtcpResult_t RtcpTwcc_Init( RtcpTwccManagerCtx_t * pTwccCtx,
                 sizeof( TwccPacketInfo_t ) * twccPacketInfoArrayLength );
         pTwccCtx->readIndex = 0;
         pTwccCtx->writeIndex = 0;
+        pTwccCtx->count = 0;
         Rtcp_InitReadWriteFunctions( &( pTwccCtx->readWriteFunctions ) );
     }
 
@@ -81,6 +82,7 @@ RtcpResult_t RtcpTwcc_AddPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
                     0,
                     sizeof( TwccPacketInfo_t ) );
             pTwccCtx->readIndex = INC_READ_INDEX( pTwccCtx );
+            pTwccCtx->count -= 1;
         }
 
         pTwccPacketInfo = &( pTwccCtx->pTwccPktInfoArray[ pTwccCtx->writeIndex ] );
@@ -90,6 +92,7 @@ RtcpResult_t RtcpTwcc_AddPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
         pTwccPacketInfo->remoteTimeKvs = RTCP_TWCC_PACKET_LOST_TIME;
         pTwccPacketInfo->packetSequenceNumber = seqNumber;
         pTwccCtx->writeIndex = INC_WRITE_INDEX( pTwccCtx );
+        pTwccCtx->count += 1;
 
         // result = RtcpTwcc_DeletePacketInfo( pTwccCtx,
         //                                     sentTime,
@@ -215,6 +218,7 @@ RtcpResult_t RtcpTwcc_ExtractPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
                 0,
                 sizeof( TwccPacketInfo_t ) );
         pTwccCtx->readIndex = INC_READ_INDEX( pTwccCtx );
+        pTwccCtx->count -= 1;
     }
 
     return result;
@@ -256,6 +260,7 @@ RtcpResult_t RtcpTwcc_OlderPacketInfoDeletion( RtcpTwccManagerCtx_t * pTwccCtx,
                             0,
                             sizeof( TwccPacketInfo_t ) );
                     pTwccCtx->readIndex = INC_READ_INDEX( pTwccCtx );
+                    pTwccCtx->count -= 1;
                 }
                 else {
                     isCheckComplete = 1;

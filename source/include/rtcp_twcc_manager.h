@@ -48,6 +48,7 @@ typedef struct RtcpTwccManagerCtx
     size_t twccPacketInfoArrayLength;
     size_t writeIndex;
     size_t readIndex;
+    size_t count;
     uint16_t firstReportedSeqNum;
     uint16_t lastReportedSeqNum;
     RtcpReadWriteFunctions_t readWriteFunctions;
