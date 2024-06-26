@@ -138,9 +138,9 @@ RtcpResult_t RtcpTwcc_GetPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
 /*-----------------------------------------------------------*/
 
 /* Extract the packet info for a specific sequence number */
-RtcpResult_t RtcpTwcc_GetSeqNum_PacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
-                                            TwccPacketInfo_t * pTwccPacketInfo,
-                                            uint16_t seqNum )
+RtcpResult_t RtcpTwcc_FindPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
+                                      TwccPacketInfo_t * pTwccPacketInfo,
+                                      uint16_t seqNum )
 {
     RtcpResult_t result = RTCP_RESULT_OK;
     size_t i;
@@ -315,9 +315,9 @@ RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
             {
                 runLengthChunkPackets = ( packetChunk & RTCP_RUN_LENGTH_BITMASK );
                 statusSymbol = ( packetChunk & RTCP_RUN_LENGTH_STATUS_SYMBOL_BITMASK ) >> RTCP_RUN_LENGTH_STATUS_SYMBOL_LOCATION;
-                getSeqResult = RtcpTwcc_GetSeqNum_PacketInfo( pTwccCtx,
-                                                              &twccPacketInfo,
-                                                              startSeqNum );
+                getSeqResult = RtcpTwcc_FindPacketInfo( pTwccCtx,
+                                                        &twccPacketInfo,
+                                                        startSeqNum );
 
                 for( i = 0; i < runLengthChunkPackets; i++ )
                 {
@@ -375,9 +375,9 @@ RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
                 {
                     statusSymbol = ( packetChunk >> RTCP_VECTOR_SYMBOL_BITMASK( i,
                                                                                 symbolSize ) ) & RTCP_VECTOR_SYMBOL_LOCATION( symbolSize );
-                    getSeqResult = RtcpTwcc_GetSeqNum_PacketInfo( pTwccCtx,
-                                                                  &twccPacketInfo,
-                                                                  startSeqNum );
+                    getSeqResult = RtcpTwcc_FindPacketInfo( pTwccCtx,
+                                                            &twccPacketInfo,
+                                                            startSeqNum );
                     switch( statusSymbol )
                     {
                         case RTCP_TWCC_STATUS_SYMBOL_SMALLDELTA:
@@ -460,9 +460,9 @@ RtcpResult_t RtcpTwcc_GetBandwidthParameters( RtcpTwccManagerCtx_t * pTwccCtx,
 
         while( seqNum != ( pTwccCtx->lastReportedSeqNum + 1 ) )
         {
-            result = RtcpTwcc_GetSeqNum_PacketInfo( pTwccCtx,
-                                                    &twccPacketInfo,
-                                                    seqNum );
+            result = RtcpTwcc_FindPacketInfo( pTwccCtx,
+                                              &twccPacketInfo,
+                                              seqNum );
             if( result == RTCP_RESULT_TWCC_NO_PACKET_FOUND )
             {
                 localStartTimeKvs = RTCP_TWCC_PACKET_UNITIALIZED_TIME;
@@ -479,9 +479,9 @@ RtcpResult_t RtcpTwcc_GetBandwidthParameters( RtcpTwccManagerCtx_t * pTwccCtx,
             if( localStartTimeKvs == RTCP_TWCC_PACKET_UNITIALIZED_TIME )
             {
                 // Time not yet set. If prev seqNum was not present / deleted
-                result = RtcpTwcc_GetSeqNum_PacketInfo( pTwccCtx,
-                                                        &twccPacketInfo,
-                                                        seqNum );
+                result = RtcpTwcc_FindPacketInfo( pTwccCtx,
+                                                  &twccPacketInfo,
+                                                  seqNum );
                 if( result == RTCP_RESULT_OK )
                 {
                     localStartTimeKvs = twccPacketInfo.localTimeKvs;
@@ -492,9 +492,9 @@ RtcpResult_t RtcpTwcc_GetBandwidthParameters( RtcpTwccManagerCtx_t * pTwccCtx,
 
         for( seqNum = baseSeqNum; seqNum != ( pTwccCtx->lastReportedSeqNum + 1 ); seqNum++ )
         {
-            result = RtcpTwcc_GetSeqNum_PacketInfo( pTwccCtx,
-                                                    &twccPacketInfo,
-                                                    seqNum );
+            result = RtcpTwcc_FindPacketInfo( pTwccCtx,
+                                              &twccPacketInfo,
+                                              seqNum );
             if( result == RTCP_RESULT_OK )
             {
                 localEndTimeKvs = twccPacketInfo.localTimeKvs;

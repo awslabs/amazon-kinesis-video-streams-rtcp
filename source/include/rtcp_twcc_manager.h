@@ -70,9 +70,9 @@ RtcpResult_t RtcpTwcc_GetPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
 RtcpResult_t RtcpTwcc_ExtractPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
                                          TwccPacketInfo_t * pTwccPacketInfo );
 
-RtcpResult_t RtcpTwcc_GetSeqNum_PacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
-                                            TwccPacketInfo_t * pTwccPacketInfo,
-                                            uint16_t seqNum );
+RtcpResult_t RtcpTwcc_FindPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
+                                      TwccPacketInfo_t * pTwccPacketInfo,
+                                      uint16_t seqNum );
 
 RtcpResult_t RtcpTwcc_OlderPacketInfoDeletion( RtcpTwccManagerCtx_t * pTwccCtx,
                                                uint64_t currentPacketSentTime,
