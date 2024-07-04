@@ -893,6 +893,8 @@ RtcpResult_t Rtcp_ParseSliPacket( RtcpContext_t * pCtx,
             pSliPacket->numSliInfos = numSliInfos;
         }
     }
+
+    return result;
 }
 
 /*-----------------------------------------------------------*/
@@ -1098,8 +1100,8 @@ RtcpResult_t Rtcp_ParseNackPacket( RtcpContext_t * pCtx,
                                    RtcpNackPacket_t * pNackPacket )
 {
     RtcpResult_t result = RTCP_RESULT_OK;
-    size_t i, currentIndex = 0;
-    uint16_t startingSeqNum, bitmask, seqNumCount = 0;
+    size_t currentIndex = 0;
+    uint16_t i, startingSeqNum, bitmask, seqNumCount = 0;
 
     if( ( pCtx == NULL ) ||
         ( pRtcpPacket == NULL ) ||
