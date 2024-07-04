@@ -10,6 +10,13 @@
 
 /*-----------------------------------------------------------*/
 
+#define RTCP_TWCC_PACKET_LOST_TIME                  ( ( uint64_t ) ( -1 ) )
+#define RTCP_TWCC_PACKET_UNINITIALIZED_TIME         0
+#define RTCP_TWCC_HUNDREDS_OF_NANOS_IN_A_SECOND     10000000
+#define RTCP_TWCC_ESTIMATOR_TIME_WINDOW             ( 1 * RTCP_TWCC_HUNDREDS_OF_NANOS_IN_A_SECOND )
+
+/*-----------------------------------------------------------*/
+
 typedef enum RtcpResult
 {
     RTCP_RESULT_OK,
@@ -358,7 +365,7 @@ typedef struct RtcpNackPacket
 typedef struct PacketArrivalInfo
 {
     uint16_t seqNum;
-    uint64_t remoteArrivalTimestamp;
+    uint64_t remoteArrivalTime;
 } PacketArrivalInfo_t;
 
 typedef struct RtcpTwccPacket

@@ -159,8 +159,6 @@
  * RFC - https://datatracker.ietf.org/doc/html/draft-holmer-rmcat-transport-wide-cc-extensions-01#section-3.1
  */
 #define RTCP_TWCC_PACKET_MIN_PAYLOAD_LENGTH         18
-#define RTCP_TWCC_HUNDREDS_OF_NANOS_IN_A_SECOND     10000000
-#define RTCP_TWCC_PACKET_LOST_TIME                  ( ( uint64_t ) ( -1 ) )
 
 #define RTCP_TWCC_REFERENCE_TIME_BITMASK            0xFFFFFF00
 #define RTCP_TWCC_REFERENCE_TIME_LOCATION           8
@@ -412,7 +410,7 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
     uint16_t packetsRemaining = pTwccPacket->packetStatusCount;
     uint16_t i, packetChunk, statusSymbol, numPacketsInRunLengthChunk, recvDelta;
     uint16_t remoteSeqNum, symbolSize, symbolCount, symbolList;
-    uint64_t referenceTime, remoteArrivalTimestamp;
+    uint64_t referenceTime, remoteArrivalTime;
 
     remoteSeqNum = pTwccPacket->baseSeqNum;
     referenceTime = RTCP_TWCC_MS_TO_HUNDRED_OF_NANOS( pTwccPacket->referenceTime * 64 ); /* Reference time is represented in multiples of 64ms. */
@@ -435,7 +433,7 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                 {
                     case RTCP_TWCC_PACKET_STATUS_NOT_RECEIVED:
                     {
-                        remoteArrivalTimestamp = RTCP_TWCC_PACKET_LOST_TIME;
+                        remoteArrivalTime = RTCP_TWCC_PACKET_LOST_TIME;
                     }
                     break;
 
@@ -447,7 +445,7 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                             currentReceiveDeltaIndex += 1;
 
                             referenceTime += RTCP_TWCC_US_TO_HUNDRED_OF_NANOS( recvDelta * 250 ); /* Deltas are represented as multiples of 250us. */
-                            remoteArrivalTimestamp = referenceTime;
+                            remoteArrivalTime = referenceTime;
                         }
                         else
                         {
@@ -464,7 +462,7 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                             currentReceiveDeltaIndex += 2;
 
                             referenceTime += RTCP_TWCC_US_TO_HUNDRED_OF_NANOS( recvDelta * 250 ); /* Deltas are represented as multiples of 250us. */
-                            remoteArrivalTimestamp = referenceTime;
+                            remoteArrivalTime = referenceTime;
                         }
                         else
                         {
@@ -479,7 +477,7 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                     if( numArrivalInfos < pTwccPacket->arrivalInfoListLength )
                     {
                         pTwccPacket->pArrivalInfoList[ numArrivalInfos ].seqNum = remoteSeqNum;
-                        pTwccPacket->pArrivalInfoList[ numArrivalInfos ].remoteArrivalTimestamp = remoteArrivalTimestamp;
+                        pTwccPacket->pArrivalInfoList[ numArrivalInfos ].remoteArrivalTime = remoteArrivalTime;
                         numArrivalInfos += 1;
                     }
                     else
@@ -511,7 +509,7 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                 {
                     case RTCP_TWCC_PACKET_STATUS_NOT_RECEIVED:
                     {
-                        remoteArrivalTimestamp = RTCP_TWCC_PACKET_LOST_TIME;
+                        remoteArrivalTime = RTCP_TWCC_PACKET_LOST_TIME;
                     }
                     break;
 
@@ -523,7 +521,7 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                             currentReceiveDeltaIndex += 1;
 
                             referenceTime += RTCP_TWCC_US_TO_HUNDRED_OF_NANOS( recvDelta * 250 ); /* Deltas are represented as multiples of 250us. */
-                            remoteArrivalTimestamp = referenceTime;
+                            remoteArrivalTime = referenceTime;
                         }
                         else
                         {
@@ -540,7 +538,7 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                             currentReceiveDeltaIndex += 2;
 
                             referenceTime += RTCP_TWCC_US_TO_HUNDRED_OF_NANOS( recvDelta * 250 ); /* Deltas are represented as multiples of 250us. */
-                            remoteArrivalTimestamp = referenceTime;
+                            remoteArrivalTime = referenceTime;
                         }
                         else
                         {
@@ -555,7 +553,7 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                     if( numArrivalInfos < pTwccPacket->arrivalInfoListLength )
                     {
                         pTwccPacket->pArrivalInfoList[ numArrivalInfos ].seqNum = remoteSeqNum;
-                        pTwccPacket->pArrivalInfoList[ numArrivalInfos ].remoteArrivalTimestamp = remoteArrivalTimestamp;
+                        pTwccPacket->pArrivalInfoList[ numArrivalInfos ].remoteArrivalTime = remoteArrivalTime;
                         numArrivalInfos += 1;
                     }
                     else

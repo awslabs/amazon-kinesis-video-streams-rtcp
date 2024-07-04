@@ -7,21 +7,17 @@
 
 /* API includes. */
 #include "rtcp_data_types.h"
-#include "rtcp_endianness.h"
 
-#define RTCP_TWCC_PACKET_UNITIALIZED_TIME                   0
-#define RTCP_TWCC_PACKET_LOST_TIME                          ( ( uint64_t ) ( -1LL ) )
-#define RTCP_MILLISECONDS_PER_SECOND                        1000LL
-#define RTCP_HUNDREDS_OF_NANOS_IN_A_SECOND                  ( ( int64_t ) 10000000 )
-#define RTCP_TWCC_ESTIMATOR_TIME_WINDOW                     ( 1 * RTCP_HUNDREDS_OF_NANOS_IN_A_SECOND )
-// https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01
-// Deltas are represented as multiples of 250us:
-#define RTCP_TWCC_TICKS_PER_SECOND                          ( 1000000LL / 250 )
-#define RTCP_CONVERT_TIMESCALE( pts, from_timescale, to_timescale )       ( pts * to_timescale / from_timescale )
+/*-----------------------------------------------------------*/
 
-#define RTCP_VECTOR_SYMBOL_LOCATION( symbolSize )           ( symbolSize ? 3u : 1u )
-#define RTCP_VECTOR_SYMBOL_SIZE( symbolSize )               ( symbolSize ? 2u : 1u )
-#define RTCP_VECTOR_SYMBOL_BITMASK( i, symbolSize )         ( 14u - ( ( i + 1 ) * RTCP_VECTOR_SYMBOL_SIZE( symbolSize ) ) )
+typedef enum RtcpTwccManagerResult
+{
+    RTCP_TWCC_MANAGER_RESULT_OK,
+    RTCP_TWCC_MANAGER_RESULT_BAD_PARAM,
+    RTCP_TWCC_MANAGER_RESULT_EMPTY,
+    RTCP_TWCC_MANAGER_RESULT_PACKET_NOT_FOUND
+} RtcpTwccManagerResult_t;
+
 /*-----------------------------------------------------------*/
 
 typedef struct TwccBandwidthInfo
@@ -33,55 +29,39 @@ typedef struct TwccBandwidthInfo
     int64_t duration;
 } TwccBandwidthInfo_t;
 
-typedef struct TwccPacketInfo // RTP packet info hence not prefixing with RTCP
+typedef struct TwccPacketInfo
 {
-    uint64_t localTimeKvs;
-    uint64_t remoteTimeKvs;
-    uint32_t packetSize;
-    uint16_t packetSequenceNumber;
+    uint64_t localSentTime;
+    size_t packetSize;
+    uint16_t packetSeqNum;
 } TwccPacketInfo_t;
 
-typedef struct RtcpTwccManagerCtx
+typedef struct RtcpTwccManager
 {
-    TwccPacketInfo_t * pTwccPktInfoArray;    // If we allocate 256 elements size of this array becomes ~ 5.5KB , if 512 elements ~11Kb
-                                             // 512 is a better choice according to demoRun
+    TwccPacketInfo_t * pTwccPacketInfoArray;
     size_t twccPacketInfoArrayLength;
     size_t writeIndex;
     size_t readIndex;
     size_t count;
-    uint16_t firstReportedSeqNum;
-    uint16_t lastReportedSeqNum;
-    RtcpReadWriteFunctions_t readWriteFunctions;
-} RtcpTwccManagerCtx_t;
+} RtcpTwccManager_t;
+
 /*-----------------------------------------------------------*/
 
-RtcpResult_t RtcpTwcc_Init( RtcpTwccManagerCtx_t * pTwccCtx,
-                            TwccPacketInfo_t * pTwccBuffer,
-                            size_t twccBufferSize );
+RtcpTwccManagerResult_t RtcpTwccManager_Init( RtcpTwccManager_t * pTwccManager,
+                                              TwccPacketInfo_t * pTwccPacketInfoArray,
+                                              size_t twccPacketInfoArrayLength );
 
-RtcpResult_t RtcpTwcc_AddPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
-                                     uint32_t payloadLength,
-                                     uint32_t sentTime,
-                                     uint16_t seqNumber );
+RtcpTwccManagerResult_t RtcpTwccManager_AddPacketInfo( RtcpTwccManager_t * pTwccManager,
+                                                       const TwccPacketInfo_t * pTwccPacketInfoToAdd );
 
-RtcpResult_t RtcpTwcc_GetPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
-                                     TwccPacketInfo_t * pTwccPacketInfo );
+RtcpTwccManagerResult_t RtcpTwccManager_FindPacketInfo( RtcpTwccManager_t * pTwccManager,
+                                                        uint16_t seqNum,
+                                                        TwccPacketInfo_t * pOutTwccPacketInfo );
 
-RtcpResult_t RtcpTwcc_ExtractPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
-                                         TwccPacketInfo_t * pTwccPacketInfo );
+RtcpTwccManagerResult_t RtcpTwccManager_HandleTwccPacket( RtcpTwccManager_t * pTwccManager,
+                                                          const RtcpTwccPacket_t * pTwccPacket,
+                                                          TwccBandwidthInfo_t * pBandwidthInfo );
 
-RtcpResult_t RtcpTwcc_FindPacketInfo( RtcpTwccManagerCtx_t * pTwccCtx,
-                                      TwccPacketInfo_t * pTwccPacketInfo,
-                                      uint16_t seqNum );
-
-RtcpResult_t RtcpTwcc_OlderPacketInfoDeletion( RtcpTwccManagerCtx_t * pTwccCtx,
-                                               uint64_t currentPacketSentTime,
-                                               uint16_t seqNumber );
-
-RtcpResult_t RtcpTwcc_ParseRtcpChunk( RtcpTwccManagerCtx_t * pTwccCtx,
-                                      RtcpTwccPacket_t * rtcpTwccPacket );
-
-RtcpResult_t RtcpTwcc_GetBandwidthParameters( RtcpTwccManagerCtx_t * pTwccCtx,
-                                              TwccBandwidthInfo_t * pBandwidthInfo );
+/*-----------------------------------------------------------*/
 
 #endif /* TWCC_MANAGER_H */
