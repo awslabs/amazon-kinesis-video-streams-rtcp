@@ -572,6 +572,11 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
         }
     }
 
+    if( pTwccPacket->pArrivalInfoList == NULL )
+    {
+        pTwccPacket->arrivalInfoListLength = numArrivalInfos;
+    }
+
     return result;
 }
 
