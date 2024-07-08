@@ -632,7 +632,7 @@ RtcpResult_t Rtcp_SerializeSenderReport( RtcpContext_t * pCtx,
         firstWord = RTCP_HEADER_VERSION << RTCP_HEADER_VERSION_LOCATION;
         firstWord |= ( pSenderReport->numReceptionReports << RTCP_HEADER_RC_LOCATION );
         firstWord |= ( RTCP_PACKET_TYPE_SENDER_REPORT << RTCP_HEADER_PACKET_TYPE_LOCATION );
-        firstWord |= ( ( serializedReportLength - 1U ) << RTCP_HEADER_PACKET_LENGTH_LOCATION );
+        firstWord |= ( ( RTCP_BYTES_TO_WORDS( serializedReportLength ) - 1U ) << RTCP_HEADER_PACKET_LENGTH_LOCATION );
 
         /* Write RTCP Packet header. */
         RTCP_WRITE_UINT32( &( pBuffer[ currentIndex ] ),
@@ -1185,7 +1185,7 @@ RtcpResult_t Rtcp_ParseTwccPacket( RtcpContext_t * pCtx,
         ( pRtcpPacket == NULL ) ||
         ( pTwccPacket == NULL ) ||
         ( pRtcpPacket->pPayload == NULL ) ||
-        ( pRtcpPacket->payloadLength <RTCP_TWCC_PACKET_MIN_PAYLOAD_LENGTH ) ||
+        ( pRtcpPacket->payloadLength < RTCP_TWCC_PACKET_MIN_PAYLOAD_LENGTH ) ||
         ( pRtcpPacket->header.packetType != RTCP_PACKET_TRANSPORT_FEEDBACK_TWCC ) )
     {
         result = RTCP_RESULT_BAD_PARAM;
