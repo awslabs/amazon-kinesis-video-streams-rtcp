@@ -572,10 +572,7 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
         }
     }
 
-    if( pTwccPacket->pArrivalInfoList == NULL )
-    {
-        pTwccPacket->arrivalInfoListLength = numArrivalInfos;
-    }
+    pTwccPacket->arrivalInfoListLength = numArrivalInfos;
 
     return result;
 }
@@ -711,7 +708,7 @@ RtcpResult_t Rtcp_SerializeReceiverReport( RtcpContext_t * pCtx,
         firstWord = RTCP_HEADER_VERSION << RTCP_HEADER_VERSION_LOCATION;
         firstWord |= ( pReceiverReport->numReceptionReports << RTCP_HEADER_RC_LOCATION );
         firstWord |= ( RTCP_PACKET_TYPE_RECEIVER_REPORT << RTCP_HEADER_PACKET_TYPE_LOCATION );
-        firstWord |= ( ( serializedReportLength - 1U ) << RTCP_HEADER_PACKET_LENGTH_LOCATION );
+        firstWord |= ( ( RTCP_BYTES_TO_WORDS( serializedReportLength ) - 1U ) << RTCP_HEADER_PACKET_LENGTH_LOCATION );
 
         /* Write RTCP Packet header. */
         RTCP_WRITE_UINT32( &( pBuffer[ currentIndex ] ),
