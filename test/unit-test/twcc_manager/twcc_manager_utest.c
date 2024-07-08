@@ -26,324 +26,167 @@ TwccPacketInfo_t twccBuffer[ SIZE_OF_TWCC_INFO_PKT_ARRAY ];
  */
 void test_twccAddPacket( void )
 {
-    uint16_t seqNum = 256, seqNumber = 0;
-    uint64_t sentTime;
-    uint32_t payloadLength, i;
-    RtcpTwccManagerCtx_t twccCtx;
+    uint16_t seqNum = 256;
+    uint32_t i;
+    RtcpTwccManager_t twccCtx;
     RtcpResult_t result;
+    TwccPacketInfo_t twccPacketInfo = {0};
 
-    result = RtcpTwcc_Init( &twccCtx,
-                            &( twccBuffer[0] ),
-                            SIZE_OF_TWCC_INFO_PKT_ARRAY );
+    result = RtcpTwccManager_Init( &twccCtx,
+                                   &( twccBuffer[0] ),
+                                   SIZE_OF_TWCC_INFO_PKT_ARRAY );
     TEST_ASSERT_EQUAL( result,
-                       RTCP_RESULT_OK );
+                       RTCP_TWCC_MANAGER_RESULT_OK );
 
     for( i = 0; i < 4; i++ )
     {
-        payloadLength = ( rand() % ( 1000 ) );
-        sentTime = time( NULL );
-        seqNumber += seqNum;
-        result = RtcpTwcc_AddPacketInfo( &twccCtx,
-                                         payloadLength,
-                                         sentTime,
-                                         seqNumber );
+        twccPacketInfo.packetSize = ( rand() % ( 1000 ) );
+        twccPacketInfo.localSentTime = time( NULL );
+        twccPacketInfo.packetSeqNum += seqNum;
+        result = RtcpTwccManager_AddPacketInfo( &twccCtx,
+                                                &twccPacketInfo );
         TEST_ASSERT_EQUAL( result,
-                           RTCP_RESULT_OK );
+                           RTCP_TWCC_MANAGER_RESULT_OK );
     }
 
     TEST_ASSERT_EQUAL( twccCtx.readIndex,
                        0 );
     TEST_ASSERT_EQUAL( twccCtx.writeIndex,
                        4 );
+    TEST_ASSERT_EQUAL( twccCtx.count,
+                       4 );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Validate Twcc Manager Get packet functionality.
- */
-void test_twccGetPacket( void )
-{
-    uint16_t seqNum = 256, seqNumber = 0;
-    uint64_t sentTime;
-    uint32_t payloadLength, i;
-    RtcpTwccManagerCtx_t twccCtx;
-    RtcpResult_t result;
-    TwccPacketInfo_t twccPacketInfo;
-
-    result = RtcpTwcc_Init( &twccCtx,
-                            &( twccBuffer[0] ),
-                            SIZE_OF_TWCC_INFO_PKT_ARRAY );
-    TEST_ASSERT_EQUAL( result,
-                       RTCP_RESULT_OK );
-
-    for( i = 0; i < 10; i++ )
-    {
-        payloadLength = i;
-        sentTime = time( NULL );
-        seqNumber += seqNum;
-        result = RtcpTwcc_AddPacketInfo( &twccCtx,
-                                         payloadLength,
-                                         sentTime,
-                                         seqNumber );
-        TEST_ASSERT_EQUAL( result,
-                           RTCP_RESULT_OK );
-    }
-    TEST_ASSERT_EQUAL( twccCtx.readIndex,
-                       0 );
-    TEST_ASSERT_EQUAL( twccCtx.writeIndex,
-                       10 );
-
-    /* Get packet info from the read index */
-    result = RtcpTwcc_GetPacketInfo( &twccCtx,
-                                     &twccPacketInfo );
-    TEST_ASSERT_EQUAL( result,
-                       RTCP_RESULT_OK );
-    TEST_ASSERT_EQUAL( twccPacketInfo.packetSize,
-                       0 );
-    TEST_ASSERT_EQUAL( twccPacketInfo.packetSequenceNumber,
-                       256 );
-}
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Validate Twcc Manager Remove packet functionality.
- */
-void test_twccRemovePacket( void )
-{
-    uint16_t seqNum = 256, seqNumber = 0;
-    uint64_t sentTime;
-    uint32_t payloadLength, i;
-    RtcpTwccManagerCtx_t twccCtx;
-    RtcpResult_t result;
-    TwccPacketInfo_t twccPacketInfo;
-
-    result = RtcpTwcc_Init( &twccCtx,
-                            &( twccBuffer[0] ),
-                            SIZE_OF_TWCC_INFO_PKT_ARRAY );
-    TEST_ASSERT_EQUAL( result,
-                       RTCP_RESULT_OK );
-
-    for( i = 0; i < 10; i++ ) {
-        payloadLength = i;
-        sentTime = time( NULL );
-        seqNumber += seqNum;
-        result = RtcpTwcc_AddPacketInfo( &twccCtx,
-                                         payloadLength,
-                                         sentTime,
-                                         seqNumber );
-        TEST_ASSERT_EQUAL( result,
-                           RTCP_RESULT_OK );
-    }
-    TEST_ASSERT_EQUAL( twccCtx.readIndex,
-                       0 );
-    TEST_ASSERT_EQUAL( twccCtx.writeIndex,
-                       10 );
-
-    /* Get packet info from the read index */
-    result = RtcpTwcc_ExtractPacketInfo( &twccCtx,
-                                         &twccPacketInfo );
-    TEST_ASSERT_EQUAL( result,
-                       RTCP_RESULT_OK );
-    TEST_ASSERT_EQUAL( twccPacketInfo.packetSize,
-                       0 );
-    TEST_ASSERT_EQUAL( twccPacketInfo.packetSequenceNumber,
-                       256 );
-    TEST_ASSERT_EQUAL( twccCtx.readIndex,
-                       1 );
-    TEST_ASSERT_EQUAL( twccCtx.writeIndex,
-                       10 );
-}
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Validate Twcc Manager Older packet deletion functionality.
+ * @brief Validate Twcc Manager check Older packet deletion functionality.
  */
 void test_twccOlderPacketInfoDeletion( void )
 {
-    uint16_t seqNum = 256, seqNumber = 0;
-    uint64_t sentTime;
-    uint32_t payloadLength, i;
-    RtcpTwccManagerCtx_t twccCtx;
+    uint16_t seqNum = 256;
+    uint32_t i;
+    RtcpTwccManager_t twccCtx;
     RtcpResult_t result;
+    TwccPacketInfo_t twccPacketInfo = {0};
 
-    result = RtcpTwcc_Init( &twccCtx,
-                            &( twccBuffer[0] ),
-                            SIZE_OF_TWCC_INFO_PKT_ARRAY );
+    result = RtcpTwccManager_Init( &twccCtx,
+                                   &( twccBuffer[0] ),
+                                   SIZE_OF_TWCC_INFO_PKT_ARRAY );
     TEST_ASSERT_EQUAL( result,
-                       RTCP_RESULT_OK );
+                       RTCP_TWCC_MANAGER_RESULT_OK );
 
-    for( i = 0; i < 60; i++ ) {
-        payloadLength = i;
-        sentTime = time( NULL );
-        seqNumber += seqNum;
-        result = RtcpTwcc_AddPacketInfo( &twccCtx,
-                                         payloadLength,
-                                         sentTime,
-                                         seqNumber );
-        TEST_ASSERT_EQUAL( result,
-                           RTCP_RESULT_OK );
+    twccPacketInfo.localSentTime = time( NULL );
+    twccPacketInfo.packetSize = 0;
+    twccPacketInfo.packetSeqNum += seqNum;
+    result = RtcpTwccManager_AddPacketInfo( &twccCtx,
+                                            &twccPacketInfo );
+    TEST_ASSERT_EQUAL( result,
+                           RTCP_TWCC_MANAGER_RESULT_OK );
 
-        result = RtcpTwcc_OlderPacketInfoDeletion( &twccCtx,
-                                                   sentTime,
-                                                   seqNumber );
-        //sleep( 1 ); // Need to get different sentTime
+    for( i = 1; i < SIZE_OF_TWCC_INFO_PKT_ARRAY; i++ ) {
+        twccPacketInfo.packetSize = i;
+        twccPacketInfo.localSentTime += RTCP_TWCC_ESTIMATOR_TIME_WINDOW + 1;
+        twccPacketInfo.packetSeqNum += seqNum;
+        result = RtcpTwccManager_AddPacketInfo( &twccCtx,
+                                                &twccPacketInfo );
         TEST_ASSERT_EQUAL( result,
-                           RTCP_RESULT_OK );
+                           RTCP_TWCC_MANAGER_RESULT_OK );
+        /* Delete every other packet as diference between timestamp b/w 2 packets is > RTCP_TWCC_ESTIMATOR_TIME_WINDOW
+         * Hence count is always 1. */
+        TEST_ASSERT_EQUAL( twccCtx.readIndex,
+                           i );
+            TEST_ASSERT_EQUAL( twccCtx.count,
+                           1 );
     }
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Validate RTCP twcc packet parsing containing only RTCP RUN_LENGTH_CHUNK.
+ * @brief Validate Twcc Manager Find packet functionality.
  */
-void test_twccParseTwccPacket( void )
+void test_twccFindPacket_NotFound( void )
 {
-    RtcpContext_t ctx;
+    uint16_t seqNum = 256;
+    uint32_t i;
+    RtcpTwccManager_t twccCtx;
     RtcpResult_t result;
-    RtcpTwccPacket_t twccPacket;
-    RtcpTwccManagerCtx_t twccManagerCtx;
-    uint8_t twccpayload[] = { 0x1c, 0x8c, 0x77, 0xb6, 0x3a, 0x1b, 0x46, 0x4a, 0x00, 0x11, 0x00, 0x08, 0x63, 0xe3,
-                              0x21, 0x01, 0x20, 0x08, 0xb3, 0x57, 0x00, 0x00, 0x00, 0x00, 0x00, 0x4b, 0x00, 0x02 };
+    TwccPacketInfo_t twccPacketInfo = {0};
 
-    result = Rtcp_Init( &ctx );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
+    result = RtcpTwccManager_Init( &twccCtx,
+                                   &( twccBuffer[0] ),
+                                   SIZE_OF_TWCC_INFO_PKT_ARRAY );
+    TEST_ASSERT_EQUAL( result,
+                       RTCP_TWCC_MANAGER_RESULT_OK );
 
-    memset( &twccPacket,
-            0x00,
-            sizeof( RtcpTwccPacket_t ) );
+    for( i = 0; i < 10; i++ )
+    {
+        twccPacketInfo.packetSize = i;
+        twccPacketInfo.localSentTime = time( NULL );
+        twccPacketInfo.packetSeqNum += seqNum;
+        result = RtcpTwccManager_AddPacketInfo( &twccCtx,
+                                                &twccPacketInfo );
+        TEST_ASSERT_EQUAL( result,
+                           RTCP_TWCC_MANAGER_RESULT_OK );
+    }
+    TEST_ASSERT_EQUAL( twccCtx.readIndex,
+                       0 );
+    TEST_ASSERT_EQUAL( twccCtx.writeIndex,
+                       10 );
 
-    result = Rtcp_ParseTwccPacket( &ctx,
-                                   &( twccpayload[0] ),
-                                   sizeof( twccpayload ),
-                                   &twccPacket );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
-    TEST_ASSERT_EQUAL( twccPacket.pPacketChunkStart,
-                       &( twccpayload[16] ) );
-    TEST_ASSERT_EQUAL( twccPacket.pRecvDeltaStart,
-                       &( twccpayload[18] ) );
-    TEST_ASSERT_EQUAL( twccPacket.baseSeqNum,
-                       17 );
-
-    result = RtcpTwcc_Init( &twccManagerCtx,
-                            &( twccBuffer[0] ),
-                            SIZE_OF_TWCC_INFO_PKT_ARRAY );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
-
-    result = RtcpTwcc_ParseRtcpChunk( &twccManagerCtx,
-                                      &twccPacket );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
-    TEST_ASSERT_EQUAL( twccManagerCtx.firstReportedSeqNum,
-                       17 );
-    TEST_ASSERT_EQUAL( twccManagerCtx.lastReportedSeqNum,
-                       24 );
+    /* Get packet info from the read index */
+    result = RtcpTwccManager_FindPacketInfo( &twccCtx,
+                                             2,
+                                             &twccPacketInfo );
+    TEST_ASSERT_EQUAL( result,
+                       RTCP_TWCC_MANAGER_RESULT_PACKET_NOT_FOUND );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Validate RTCP twcc packet parsing containing only RTCP RUN_LENGTH_CHUNK.
+ * @brief Validate Twcc Manager Find packet functionality.
  */
-void test_twccParseTwccPacket2( void )
+void test_twccFindPacket_Found( void )
 {
-    RtcpContext_t ctx;
+    uint16_t seqNum = 256;
+    uint32_t i;
+    RtcpTwccManager_t twccCtx;
     RtcpResult_t result;
-    RtcpTwccPacket_t twccPacket;
-    RtcpTwccManagerCtx_t twccManagerCtx;
-    uint8_t twccpayload[] = { 0xcb, 0x00, 0x18, 0x1a, 0x6d, 0x06, 0xec, 0xda, 0x00, 0xa5, 0x00, 0x0c, 0x64, 0x5e, 0x11, 0x0f, 0x20,
-                              0x0c, 0x84, 0x00, 0x00, 0x00, 0x00, 0x23, 0x50, 0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 };
-    result = Rtcp_Init( &ctx );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
+    TwccPacketInfo_t twccPacketInfo = {0};
 
-    memset( &twccPacket,
-            0x00,
-            sizeof( RtcpTwccPacket_t ) );
+    result = RtcpTwccManager_Init( &twccCtx,
+                                   &( twccBuffer[0] ),
+                                   SIZE_OF_TWCC_INFO_PKT_ARRAY );
+    TEST_ASSERT_EQUAL( result,
+                       RTCP_TWCC_MANAGER_RESULT_OK );
 
-    result = Rtcp_ParseTwccPacket( &ctx,
-                                   &( twccpayload[0] ),
-                                   sizeof( twccpayload ),
-                                   &twccPacket );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
-    TEST_ASSERT_EQUAL( twccPacket.pPacketChunkStart,
-                       &( twccpayload[16] ) );
-    TEST_ASSERT_EQUAL( twccPacket.pRecvDeltaStart,
-                       &( twccpayload[18] ) );
-    TEST_ASSERT_EQUAL( twccPacket.baseSeqNum,
-                       165 );
+    for( i = 0; i < 10; i++ )
+    {
+        twccPacketInfo.packetSize = i;
+        twccPacketInfo.localSentTime = time( NULL );
+        twccPacketInfo.packetSeqNum += seqNum;
+        result = RtcpTwccManager_AddPacketInfo( &twccCtx,
+                                                &twccPacketInfo );
+        TEST_ASSERT_EQUAL( result,
+                           RTCP_TWCC_MANAGER_RESULT_OK );
+    }
+    TEST_ASSERT_EQUAL( twccCtx.readIndex,
+                       0 );
+    TEST_ASSERT_EQUAL( twccCtx.writeIndex,
+                       10 );
 
-    result = RtcpTwcc_Init( &twccManagerCtx,
-                            &( twccBuffer[0] ),
-                            SIZE_OF_TWCC_INFO_PKT_ARRAY );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
-
-    result = RtcpTwcc_ParseRtcpChunk( &twccManagerCtx,
-                                      &twccPacket );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
-    TEST_ASSERT_EQUAL( twccManagerCtx.firstReportedSeqNum,
-                       165 );
-    TEST_ASSERT_EQUAL( twccManagerCtx.lastReportedSeqNum,
-                       176 );
+    /* Get packet info from the read index */
+    result = RtcpTwccManager_FindPacketInfo( &twccCtx,
+                                             512,
+                                             &twccPacketInfo );
+    TEST_ASSERT_EQUAL( result,
+                       RTCP_TWCC_MANAGER_RESULT_OK );
+    TEST_ASSERT_EQUAL( twccPacketInfo.packetSize,
+                       1 );
+    TEST_ASSERT_EQUAL( twccPacketInfo.packetSeqNum,
+                       512 );
 }
 
-/*-----------------------------------------------------------*/
-/**
- * @brief Validate RTCP twcc packet parsing containing both RTCP RUN_LENGTH_CHUNK,
- *        & RTCP STATUS_VECTOR_CHUNK.
- */
-void test_twccParseTwccPacket3( void )
-{
-    RtcpContext_t ctx;
-    RtcpResult_t result;
-    RtcpTwccPacket_t twccPacket;
-    RtcpTwccManagerCtx_t twccManagerCtx;
-    uint8_t twccpayload[] = { 0xf2, 0x54, 0x58, 0xd3, 0x1f, 0x00, 0xc3, 0xe8, 0x2e, 0x1b, 0x00, 0x13, 0x7b, 0xa3, 0x64, 0xf1, 0x9f, 0xff, 0x20, 0x05,
-                              0x4e, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x52, 0x3e, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x11, 0x00, 0x02 };
-
-    result = Rtcp_Init( &ctx );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
-
-    memset( &twccPacket,
-            0x00,
-            sizeof( RtcpTwccPacket_t ) );
-
-    result = Rtcp_ParseTwccPacket( &ctx,
-                                   &( twccpayload[0] ),
-                                   sizeof( twccpayload ),
-                                   &twccPacket );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
-    TEST_ASSERT_EQUAL( twccPacket.pPacketChunkStart,
-                       &( twccpayload[16] ) );
-    TEST_ASSERT_EQUAL( twccPacket.pRecvDeltaStart,
-                       &( twccpayload[20] ) );
-    TEST_ASSERT_EQUAL( twccPacket.baseSeqNum,
-                       11803 );
-
-    result = RtcpTwcc_Init( &twccManagerCtx,
-                            &( twccBuffer[0] ),
-                            SIZE_OF_TWCC_INFO_PKT_ARRAY );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
-
-    result = RtcpTwcc_ParseRtcpChunk( &twccManagerCtx,
-                                      &twccPacket );
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
-                       result );
-    TEST_ASSERT_EQUAL( twccManagerCtx.firstReportedSeqNum,
-                       11803 );
-    TEST_ASSERT_EQUAL( twccManagerCtx.lastReportedSeqNum,
-                       11821 );
-}
 /*-----------------------------------------------------------*/
