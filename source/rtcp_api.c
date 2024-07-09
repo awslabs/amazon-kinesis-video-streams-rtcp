@@ -882,7 +882,7 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
 
         if( pRembPacket->ssrcListLength < numSsrc )
         {
-            result = RTCP_RESULT_OUT_OF_MEMORY;
+            result = RTCP_RESULT_INPUT_REMB_INVALID;
         }
     }
 
