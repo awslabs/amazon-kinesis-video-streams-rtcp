@@ -752,10 +752,14 @@ RtcpResult_t Rtcp_DeSerializePacket( RtcpContext_t * pCtx,
 
     if( ( pCtx == NULL ) ||
         ( pSerializedPacket == NULL ) ||
-        ( pRtcpPacket == NULL ) ||
-        ( serializedPacketLength < RTCP_HEADER_LENGTH ) )
+        ( pRtcpPacket == NULL ) )
     {
         result = RTCP_RESULT_BAD_PARAM;
+    }
+
+    if( serializedPacketLength < RTCP_HEADER_LENGTH )
+    {
+        result = RTCP_RESULT_INPUT_PACKET_TOO_SMALL;
     }
 
     if( result == RTCP_RESULT_OK )
@@ -765,7 +769,7 @@ RtcpResult_t Rtcp_DeSerializePacket( RtcpContext_t * pCtx,
         if( ( ( firstWord & RTCP_HEADER_VERSION_BITMASK ) >>
               RTCP_HEADER_VERSION_LOCATION ) != RTCP_HEADER_VERSION )
         {
-            result = RTCP_RESULT_MALFORMED_PACKET;
+            result = RTCP_RESULT_WRONG_VERSION;
         }
     }
 
@@ -912,10 +916,15 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
         ( pRtcpPacket == NULL ) ||
         ( pRembPacket == NULL ) ||
         ( pRtcpPacket->pPayload == NULL ) ||
-        ( pRtcpPacket->payloadLength < RTCP_REMB_PACKET_MIN_PAYLOAD_LENGTH ) ||
         ( pRtcpPacket->header.packetType != RTCP_PACKET_PAYLOAD_FEEDBACK_REMB ) )
     {
         result = RTCP_RESULT_BAD_PARAM;
+    }
+
+    if ( ( result == RTCP_RESULT_OK ) &&
+         ( pRtcpPacket->payloadLength < RTCP_REMB_PACKET_MIN_PAYLOAD_LENGTH ) )
+    {
+        result = RTCP_RESULT_INPUT_REMB_INVALID;
     }
 
     if( result == RTCP_RESULT_OK )
