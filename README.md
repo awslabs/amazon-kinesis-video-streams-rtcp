@@ -10,7 +10,7 @@ Congestion Control (TWCC) packets.
 
 ## What is RTCP
 
-Real-Time Transport Control Protocol (RTCP) as defined in RFC 3550(https://datatracker.ietf.org/doc/html/rfc3550), is a companion
+[Real-Time Transport Control Protocol (RTCP)](https://en.wikipedia.org/wiki/RTP_Control_Protocol) as defined in [RFC 3550](https://datatracker.ietf.org/doc/html/rfc3550), is a companion
 protocol used to monitor transmission statistics, quality of service and to provide
 control information for RTP streams.
 
