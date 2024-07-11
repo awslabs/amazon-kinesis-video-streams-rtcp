@@ -1,63 +1,71 @@
 ## amazon-kinesis-video-streams-rtcp
 
-The goal of Real-Time Transport Control Protocol (RTCP) is to provide
-RTCP serialization and Deserialization functionalities. Along the library
-also offers the ability to create and parse various RTCP packet types such
-as Sender Reports (SR), Receiver Reports (RR), Full Intra Request (FIR), Picture
-Loss Indication (PLI), Slice Loss Indication (SLI), Negative Acknowledgement
-(NACK) packet, Receiver Estimated Maximum Bitrate (REMB) and Transport-wide
-Congestion Control (TWCC) packets.
+The goal of this library is to provide Real-Time Transport Control Protocol
+(RTCP) serialization and deserialization functionalities. The library supports
+creating and parsing the following RTCP packets:
+* Sender Reports (SR).
+* Receiver Reports (RR).
+* Full Intra Request (FIR).
+* Picture Loss Indication (PLI).
+* Slice Loss Indication (SLI).
+* Negative Acknowledgement (NACK) report.
+* Receiver Estimated Maximum Bitrate (REMB) report.
+* Transport-Wide Congestion Control (TWCC) report.
 
 ## What is RTCP
 
-[Real-Time Transport Control Protocol (RTCP)](https://en.wikipedia.org/wiki/RTP_Control_Protocol) as defined in [RFC 3550](https://datatracker.ietf.org/doc/html/rfc3550), is a companion
-protocol used to monitor transmission statistics, quality of service and to provide
-control information for RTP streams.
+[Real-Time Transport Control Protocol (RTCP)](https://en.wikipedia.org/wiki/RTP_Control_Protocol),
+as defined in [RFC 3550](https://datatracker.ietf.org/doc/html/rfc3550), is a
+Control Protocol, to allow monitoring of transmission statistics, quality of
+service and to provide control information for RTP streams.
 
-An RTCP packet consists of common header followed by structured data specific to RTCP
-packet type.
+An RTCP packet consists of a common header followed by structured data specific
+to the RTCP packet type.
 
 ```
-    RTCP Header:
+RTCP Header:
 
-    0                   1                   2                   3
-    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   |V=2|P|    FMT     |       PT      |             length         |
-   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+0                   1                   2                   3
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|V=2|P|    FMT     |       PT      |             length         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 ```
 
 ## Using the library
 
 ### Serializer
-    1. Call `Rtcp_Init()` to initialize the RTCP Context.
-    2. Initialize an RtcpPacket_t along with report to be send out.
-       (e.g., Sender report or Receiver report).
-    3. Call Rtcp_SerializeSenderReport() or Rtcp_SerializeReceiverReport() to serialize
-       the RtcpPacket_t passed.
+
+1. Call `Rtcp_Init()` to initialize the RTCP Context.
+2. Populate `RtcpSenderReport_t` or `RtcpReceiverReport_t` with the report data
+   to be sent out.
+3. Call `Rtcp_SerializeSenderReport()` or `Rtcp_SerializeReceiverReport()` to
+   serialize the RTCP report.
 
 ### Deserializer
-    1. Call `Rtcp_Init()` to initialize the RTCP Context.
-    2. Pass the serialized packet along with its length to `Rtcp_DeSerializePacket()`
-       to deserialize the packet.
 
-### Parse feedback packets received
-    After deserializing the RTCP packet, RtcpPacket_t can be processed further to
-    determine packet type and parse them using the following function :
-
-    1. `Rtcp_ParseSenderReport()` to parse the sender report (SR) data.
-    2. `Rtcp_ParseReceiverReport()` to parse the receiver report (RR)  data.
-    3. `Rtcp_ParseFirPacket() to parse the Full Intra Request (FIR) packet.
-    4. `Rtcp_ParsePliPacket() to parse the Picture Loss Indication (PLI) packet.
-    5. `Rtcp_ParseSliPacket() to parse the Slice Loss Indication (SLI) packet.
-    6. `Rtcp_ParseRembPacket() to parse the Receiver Estimated Maximum Bitrate (REMB) packet.
-    7. `Rtcp_ParseNackPacket() to parse the Negative Acknowledgement (NACK) packet.
-    8. `Rtcp_ParseTwccPacket() to parse the Transport Wide Congestion Control (TWCC) packet.
+1. Call `Rtcp_Init()` to initialize the RTCP Context.
+2. Pass the serialized packet, received over the wire, to the
+   `Rtcp_DeSerializePacket()` to deserialize the packet.
+3. Use one of the following APIs to further parse the deserialized packet
+   according to the value of `RtcpPacket_t.header.packetType`:
+    * Use `Rtcp_ParseSenderReport()` to parse the Sender Report (SR).
+    * Use `Rtcp_ParseReceiverReport()` to parse the Receiver Report (RR).
+    * Use `Rtcp_ParseFirPacket()` to parse the Full Intra Request (FIR).
+    * Use `Rtcp_ParsePliPacket()` to parse the Picture Loss Indication (PLI).
+    * Use `Rtcp_ParseSliPacket()` to parse the Slice Loss Indication (SLI).
+    * Use `Rtcp_ParseRembPacket()` to parse the Receiver Estimated Maximum
+      Bitrate (REMB) report.
+    * Use `Rtcp_ParseNackPacket()` to parse the Negative Acknowledgement (NACK)
+      report.
+    * Use `Rtcp_ParseTwccPacket()` to parse the Transport-Wide Congestion
+      Control (TWCC) report.
 
 ## Building Unit Tests
 
 ### Platform Prerequisites
+
 - For running unit tests:
     - C99 compiler like gcc.
     - CMake 3.13.0 or later.
@@ -66,6 +74,7 @@ packet type.
 - For running the coverage target, gcov and lcov are required.
 
 ### Checkout CMock Submodule
+
 By default, the submodules in this repository are configured with `update=none`
 in [.gitmodules](./.gitmodules) to avoid increasing clone time and disk space
 usage of other repositories.
@@ -77,9 +86,10 @@ following command to clone the submodule:
 git submodule update --checkout --init --recursive test/CMock
 ```
 
-### Steps to build Unit Tests
-1. Go to the root directory of this repository. (Make sure that the CMock
-   submodule is cloned as described in [Checkout CMock Submodule](#checkout-cmock-submodule)).
+### Steps to Build and Run Unit Tests
+
+1. Go to the root directory of this repository. Make sure that the CMock
+   submodule is cloned as described in [Checkout CMock Submodule](#checkout-cmock-submodule).
 2. Run the following command to generate Makefiles:
 
     ```sh
@@ -99,25 +109,26 @@ git submodule update --checkout --init --recursive test/CMock
     cd build && ctest -E system --output-on-failure
     ```
 
-### Steps to generate code coverage report of Unit Test
-1. Run Unit Tests in [Steps to build Unit Tests](#steps-to-build-unit-tests).
-2. Generate coverage.info in build folder:
+### Steps to Generate Code Coverage Report
+
+1. Run Unit Tests in [Steps to Build and Run Unit Tests](#steps-to-build-and-run-unit-tests).
+2. Generate coverage.info in the `build` folder:
 
     ```
     make coverage
     ```
-3. Get code coverage by lcov:
+3. Get code coverage by `lcov`:
 
     ```
     lcov --rc lcov_branch_coverage=1 -r coverage.info -o coverage.info '*test*' '*CMakeCCompilerId*' '*mocks*'
     ```
-4. Generage HTML report in folder `CodecovHTMLReport`:
+4. Generage HTML report in the folder `CodecovHTMLReport`:
 
     ```
     genhtml --rc lcov_branch_coverage=1 --ignore-errors source coverage.info --legend --output-directory=CodecovHTMLReport
     ```
 
-### Script to run Unit Test and generate code coverage report
+### Script to Run Unit Test and Generate Code Coverage Report
 
 ```sh
 git submodule update --init --recursive --checkout test/CMock
