@@ -55,9 +55,6 @@ RtcpResult_t Rtcp_ParseTwccPacket( RtcpContext_t * pCtx,
                                    const RtcpPacket_t * pRtcpPacket,
                                    RtcpTwccPacket_t * pTwccPacket );
 
-RtcpPacketType_t GetRtcpPacketType( uint8_t packetType,
-                                    uint8_t fmt );
-
 /*-----------------------------------------------------------*/
 
 #endif /* RTCP_API_H */

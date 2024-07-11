@@ -222,6 +222,70 @@
 
 /*-----------------------------------------------------------*/
 
+static RtcpPacketType_t GetRtcpPacketType( uint8_t packetType,
+                                           uint8_t fmt )
+{
+    RtcpPacketType_t ret = RTCP_PACKET_UNKNOWN;
+
+    switch( packetType )
+    {
+        case RTCP_PACKET_TYPE_FIR:
+        {
+            if( fmt == 0 )
+            {
+                ret = RTCP_PACKET_FIR;
+            }
+        }
+        break;
+
+        case RTCP_PACKET_TYPE_SENDER_REPORT:
+        {
+            ret = RTCP_PACKET_SENDER_REPORT;
+        }
+        break;
+
+        case RTCP_PACKET_TYPE_RECEIVER_REPORT:
+        {
+            ret = RTCP_PACKET_RECEIVER_REPORT;
+        }
+        break;
+
+        case RTCP_PACKET_TYPE_TRANSPORT_SPECIFIC_FEEDBACK:
+        {
+            if( fmt == RTCP_FMT_TRANSPORT_SPECIFIC_FEEDBACK_NACK )
+            {
+                ret = RTCP_PACKET_TRANSPORT_FEEDBACK_NACK;
+            }
+            else if( fmt == RTCP_FMT_TRANSPORT_SPECIFIC_FEEDBACK_TWCC )
+            {
+                ret = RTCP_PACKET_TRANSPORT_FEEDBACK_TWCC;
+            }
+        }
+        break;
+
+        case RTCP_PACKET_TYPE_PAYLOAD_SPECIFIC_FEEDBACK:
+        {
+            if( fmt == RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_PLI )
+            {
+                ret = RTCP_PACKET_PAYLOAD_FEEDBACK_PLI;
+            }
+            else if( fmt == RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_SLI )
+            {
+                ret = RTCP_PACKET_PAYLOAD_FEEDBACK_SLI;
+            }
+            else if( fmt == RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_REMB )
+            {
+                ret = RTCP_PACKET_PAYLOAD_FEEDBACK_REMB;
+            }
+        }
+        break;
+    }
+
+    return ret;
+}
+
+/*-----------------------------------------------------------*/
+
 static void WriteSenderInfo( RtcpContext_t * pCtx,
                              const RtcpSenderInfo_t * pSenderInfo,
                              uint8_t * pBuffer,
@@ -1189,70 +1253,6 @@ RtcpResult_t Rtcp_ParseTwccPacket( RtcpContext_t * pCtx,
     }
 
     return result;
-}
-
-/*-----------------------------------------------------------*/
-
-RtcpPacketType_t GetRtcpPacketType( uint8_t packetType,
-                                    uint8_t fmt )
-{
-    RtcpPacketType_t ret = RTCP_PACKET_UNKNOWN;
-
-    switch( packetType )
-    {
-        case RTCP_PACKET_TYPE_FIR:
-        {
-            if( fmt == 0 )
-            {
-                ret = RTCP_PACKET_FIR;
-            }
-        }
-        break;
-
-        case RTCP_PACKET_TYPE_SENDER_REPORT:
-        {
-            ret = RTCP_PACKET_SENDER_REPORT;
-        }
-        break;
-
-        case RTCP_PACKET_TYPE_RECEIVER_REPORT:
-        {
-            ret = RTCP_PACKET_RECEIVER_REPORT;
-        }
-        break;
-
-        case RTCP_PACKET_TYPE_TRANSPORT_SPECIFIC_FEEDBACK:
-        {
-            if( fmt == RTCP_FMT_TRANSPORT_SPECIFIC_FEEDBACK_NACK )
-            {
-                ret = RTCP_PACKET_TRANSPORT_FEEDBACK_NACK;
-            }
-            else if( fmt == RTCP_FMT_TRANSPORT_SPECIFIC_FEEDBACK_TWCC )
-            {
-                ret = RTCP_PACKET_TRANSPORT_FEEDBACK_TWCC;
-            }
-        }
-        break;
-
-        case RTCP_PACKET_TYPE_PAYLOAD_SPECIFIC_FEEDBACK:
-        {
-            if( fmt == RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_PLI )
-            {
-                ret = RTCP_PACKET_PAYLOAD_FEEDBACK_PLI;
-            }
-            else if( fmt == RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_SLI )
-            {
-                ret = RTCP_PACKET_PAYLOAD_FEEDBACK_SLI;
-            }
-            else if( fmt == RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_REMB )
-            {
-                ret = RTCP_PACKET_PAYLOAD_FEEDBACK_REMB;
-            }
-        }
-        break;
-    }
-
-    return ret;
 }
 
 /*-----------------------------------------------------------*/
