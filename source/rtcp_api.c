@@ -757,7 +757,8 @@ RtcpResult_t Rtcp_DeSerializePacket( RtcpContext_t * pCtx,
         result = RTCP_RESULT_BAD_PARAM;
     }
 
-    if( serializedPacketLength < RTCP_HEADER_LENGTH )
+    if( ( result == RTCP_RESULT_OK ) &&
+        ( serializedPacketLength < RTCP_HEADER_LENGTH ) )
     {
         result = RTCP_RESULT_INPUT_PACKET_TOO_SMALL;
     }
@@ -921,10 +922,10 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
         result = RTCP_RESULT_BAD_PARAM;
     }
 
-    if ( ( result == RTCP_RESULT_OK ) &&
+    if( ( result == RTCP_RESULT_OK ) &&
          ( pRtcpPacket->payloadLength < RTCP_REMB_PACKET_MIN_PAYLOAD_LENGTH ) )
     {
-        result = RTCP_RESULT_INPUT_REMB_INVALID;
+        result = RTCP_RESULT_INPUT_REMB_PACKET_INVALID;
     }
 
     if( result == RTCP_RESULT_OK )
@@ -946,7 +947,7 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
 
         if( pRembPacket->ssrcListLength < numSsrc )
         {
-            result = RTCP_RESULT_INPUT_REMB_INVALID;
+            result = RTCP_RESULT_INPUT_REMB_PACKET_INVALID;
         }
     }
 
