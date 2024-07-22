@@ -604,7 +604,8 @@ RtcpResult_t Rtcp_SerializeSenderReport( RtcpContext_t * pCtx,
                                          size_t * pBufferLength )
 {
     uint32_t firstWord;
-    size_t i, serializedReportLength = 0, currentIndex = 0;
+    size_t serializedReportLength = 0, currentIndex = 0;
+    uint8_t i;
     RtcpResult_t result = RTCP_RESULT_OK;
 
     if( ( pCtx == NULL ) ||
@@ -679,7 +680,8 @@ RtcpResult_t Rtcp_SerializeReceiverReport( RtcpContext_t * pCtx,
                                            size_t * pBufferLength )
 {
     uint32_t firstWord;
-    size_t i, serializedReportLength = 0, currentIndex = 0;
+    size_t serializedReportLength = 0, currentIndex = 0;
+    uint8_t i;
     RtcpResult_t result = RTCP_RESULT_OK;
 
     if( ( pCtx == NULL ) ||
@@ -910,7 +912,8 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
 {
     RtcpResult_t result = RTCP_RESULT_OK;
     const uint8_t rembUniqueIdentifier[] = { 0x52, 0x45, 0x4d, 0x42 };
-    size_t i, currentIndex = 0, numSsrc = 0;
+    size_t i, currentIndex = 0;
+    uint8_t numSsrc = 0;
     uint32_t word;
 
     if( ( pCtx == NULL ) ||
@@ -989,7 +992,8 @@ RtcpResult_t Rtcp_ParseSenderReport( RtcpContext_t * pCtx,
                                      RtcpSenderReport_t * pSenderReport )
 {
     RtcpResult_t result = RTCP_RESULT_OK;
-    size_t i, currentIndex = 0, expectedPayloadLength = 0;
+    size_t currentIndex = 0, expectedPayloadLength = 0;
+    uint8_t i;
 
     if( ( pCtx == NULL ) ||
         ( pRtcpPacket == NULL ) ||
@@ -1003,7 +1007,7 @@ RtcpResult_t Rtcp_ParseSenderReport( RtcpContext_t * pCtx,
 
     if( result == RTCP_RESULT_OK )
     {
-        if( pSenderReport->numReceptionReports < ( size_t ) pRtcpPacket->header.receptionReportCount )
+        if( pSenderReport->numReceptionReports < pRtcpPacket->header.receptionReportCount )
         {
             result = RTCP_RESULT_OUT_OF_MEMORY;
         }
@@ -1032,7 +1036,7 @@ RtcpResult_t Rtcp_ParseSenderReport( RtcpContext_t * pCtx,
                         &( pSenderReport->senderInfo ) );
         currentIndex += RTCP_SENDER_INFO_LENGTH;
 
-        for( i = 0; i < ( size_t ) pRtcpPacket->header.receptionReportCount; i++ )
+        for( i = 0; i < pRtcpPacket->header.receptionReportCount; i++ )
         {
             ReadReceptionReport( pCtx,
                                  pRtcpPacket,
@@ -1040,7 +1044,7 @@ RtcpResult_t Rtcp_ParseSenderReport( RtcpContext_t * pCtx,
                                  &( pSenderReport->pReceptionReports[ i ] ) );
             currentIndex += RTCP_RECEPTION_REPORT_LENGTH;
         }
-        pSenderReport->numReceptionReports = ( size_t ) pRtcpPacket->header.receptionReportCount;
+        pSenderReport->numReceptionReports = pRtcpPacket->header.receptionReportCount;
     }
 
     return result;
@@ -1053,7 +1057,8 @@ RtcpResult_t Rtcp_ParseReceiverReport( RtcpContext_t * pCtx,
                                        RtcpReceiverReport_t * pReceiverReport )
 {
     RtcpResult_t result = RTCP_RESULT_OK;
-    size_t i, currentIndex = 0, expectedPayloadLength = 0;
+    size_t currentIndex = 0, expectedPayloadLength = 0;
+    uint8_t i;
 
     if( ( pCtx == NULL ) ||
         ( pRtcpPacket == NULL ) ||
@@ -1067,7 +1072,7 @@ RtcpResult_t Rtcp_ParseReceiverReport( RtcpContext_t * pCtx,
 
     if( result == RTCP_RESULT_OK )
     {
-        if( pReceiverReport->numReceptionReports < ( size_t ) pRtcpPacket->header.receptionReportCount )
+        if( pReceiverReport->numReceptionReports < pRtcpPacket->header.receptionReportCount )
         {
             result = RTCP_RESULT_OUT_OF_MEMORY;
         }
@@ -1089,7 +1094,7 @@ RtcpResult_t Rtcp_ParseReceiverReport( RtcpContext_t * pCtx,
         pReceiverReport->senderSsrc = RTCP_READ_UINT32( &( pRtcpPacket->pPayload[ currentIndex ] ) );
         currentIndex += 4;
 
-        for( i = 0; i < ( size_t ) pRtcpPacket->header.receptionReportCount; i++ )
+        for( i = 0; i < pRtcpPacket->header.receptionReportCount; i++ )
         {
             ReadReceptionReport( pCtx,
                                  pRtcpPacket,
@@ -1097,7 +1102,7 @@ RtcpResult_t Rtcp_ParseReceiverReport( RtcpContext_t * pCtx,
                                  &( pReceiverReport->pReceptionReports[ i ] ) );
             currentIndex += RTCP_RECEPTION_REPORT_LENGTH;
         }
-        pReceiverReport->numReceptionReports = ( size_t ) pRtcpPacket->header.receptionReportCount;
+        pReceiverReport->numReceptionReports = pRtcpPacket->header.receptionReportCount;
     }
 
     return result;

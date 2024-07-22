@@ -132,7 +132,7 @@ typedef struct RtcpSenderReport
     uint32_t senderSsrc;
     RtcpSenderInfo_t senderInfo;
     RtcpReceptionReport_t * pReceptionReports;
-    size_t numReceptionReports;
+    uint8_t numReceptionReports;
 } RtcpSenderReport_t;
 
 /*-----------------------------------------------------------*/
@@ -172,7 +172,7 @@ typedef struct RtcpReceiverReport
 {
     uint32_t senderSsrc;
     RtcpReceptionReport_t * pReceptionReports;
-    size_t numReceptionReports;
+    uint8_t numReceptionReports;
 } RtcpReceiverReport_t;
 
 /*-----------------------------------------------------------*/
@@ -297,7 +297,7 @@ typedef struct RtcpRembPacket
     uint32_t bitRateMantissa;
     uint8_t bitRateExponent;
     uint32_t * pSsrcList;
-    size_t ssrcListLength;
+    uint8_t ssrcListLength;
 } RtcpRembPacket_t;
 
 /*-----------------------------------------------------------*/
