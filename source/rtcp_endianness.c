@@ -23,84 +23,84 @@
 
 /*-----------------------------------------------------------*/
 
-void WriteUint16Swap( uint8_t * pDst, uint16_t val )
+void RtcpWriteUint16Swap( uint8_t * pDst, uint16_t val )
 {
     *( ( uint16_t * )( pDst ) ) = SWAP_BYTES_16( val );
 }
 
 /*-----------------------------------------------------------*/
 
-void WriteUint32Swap( uint8_t * pDst, uint32_t val )
+void RtcpWriteUint32Swap( uint8_t * pDst, uint32_t val )
 {
     *( ( uint32_t * )( pDst ) ) = SWAP_BYTES_32( val );
 }
 
 /*-----------------------------------------------------------*/
 
-void WriteUint64Swap( uint8_t * pDst, uint64_t val )
+void RtcpWriteUint64Swap( uint8_t * pDst, uint64_t val )
 {
     *( ( uint64_t * )( pDst ) ) = SWAP_BYTES_64( val );
 }
 
 /*-----------------------------------------------------------*/
 
-uint16_t ReadUint16Swap( const uint8_t * pSrc )
+uint16_t RtcpReadUint16Swap( const uint8_t * pSrc )
 {
     return SWAP_BYTES_16( *( ( uint16_t * )( pSrc ) ) );
 }
 
 /*-----------------------------------------------------------*/
 
-uint32_t ReadUint32Swap( const uint8_t * pSrc )
+uint32_t RtcpReadUint32Swap( const uint8_t * pSrc )
 {
     return SWAP_BYTES_32( *( ( uint32_t * )( pSrc ) ) );
 }
 
 /*-----------------------------------------------------------*/
 
-uint64_t ReadUint64Swap( const uint8_t * pSrc )
+uint64_t RtcpReadUint64Swap( const uint8_t * pSrc )
 {
     return SWAP_BYTES_64( *( ( uint64_t * )( pSrc ) ) );
 }
 
 /*-----------------------------------------------------------*/
 
-void WriteUint16NoSwap( uint8_t * pDst, uint16_t val )
+void RtcpWriteUint16NoSwap( uint8_t * pDst, uint16_t val )
 {
     *( ( uint16_t * )( pDst ) ) = ( val );
 }
 
 /*-----------------------------------------------------------*/
 
-void WriteUint32NoSwap( uint8_t * pDst, uint32_t val )
+void RtcpWriteUint32NoSwap( uint8_t * pDst, uint32_t val )
 {
     *( ( uint32_t * )( pDst ) ) = ( val );
 }
 
 /*-----------------------------------------------------------*/
 
-void WriteUint64NoSwap( uint8_t * pDst, uint64_t val )
+void RtcpWriteUint64NoSwap( uint8_t * pDst, uint64_t val )
 {
     *( ( uint64_t * )( pDst ) ) = ( val );
 }
 
 /*-----------------------------------------------------------*/
 
-uint16_t ReadUint16NoSwap( const uint8_t * pSrc )
+uint16_t RtcpReadUint16NoSwap( const uint8_t * pSrc )
 {
     return *( ( uint16_t * )( pSrc ) );
 }
 
 /*-----------------------------------------------------------*/
 
-uint32_t ReadUint32NoSwap( const uint8_t * pSrc )
+uint32_t RtcpReadUint32NoSwap( const uint8_t * pSrc )
 {
     return *( ( uint32_t * )( pSrc ) );
 }
 
 /*-----------------------------------------------------------*/
 
-uint64_t ReadUint64NoSwap( const uint8_t * pSrc )
+uint64_t RtcpReadUint64NoSwap( const uint8_t * pSrc )
 {
     return *( ( uint64_t * )( pSrc ) );
 }
@@ -115,21 +115,21 @@ void Rtcp_InitReadWriteFunctions( RtcpReadWriteFunctions_t * pReadWriteFunctions
 
     if( isLittleEndian != 0 )
     {
-        pReadWriteFunctions->writeUint16Fn = WriteUint16Swap;
-        pReadWriteFunctions->writeUint32Fn = WriteUint32Swap;
-        pReadWriteFunctions->writeUint64Fn = WriteUint64Swap;
-        pReadWriteFunctions->readUint16Fn = ReadUint16Swap;
-        pReadWriteFunctions->readUint32Fn = ReadUint32Swap;
-        pReadWriteFunctions->readUint64Fn = ReadUint64Swap;
+        pReadWriteFunctions->writeUint16Fn = RtcpWriteUint16Swap;
+        pReadWriteFunctions->writeUint32Fn = RtcpWriteUint32Swap;
+        pReadWriteFunctions->writeUint64Fn = RtcpWriteUint64Swap;
+        pReadWriteFunctions->readUint16Fn = RtcpReadUint16Swap;
+        pReadWriteFunctions->readUint32Fn = RtcpReadUint32Swap;
+        pReadWriteFunctions->readUint64Fn = RtcpReadUint64Swap;
     }
     else
     {
-        pReadWriteFunctions->writeUint16Fn = WriteUint16NoSwap;
-        pReadWriteFunctions->writeUint32Fn = WriteUint32NoSwap;
-        pReadWriteFunctions->writeUint64Fn = WriteUint64NoSwap;
-        pReadWriteFunctions->readUint16Fn = ReadUint16NoSwap;
-        pReadWriteFunctions->readUint32Fn = ReadUint32NoSwap;
-        pReadWriteFunctions->readUint64Fn = ReadUint64NoSwap;
+        pReadWriteFunctions->writeUint16Fn = RtcpWriteUint16NoSwap;
+        pReadWriteFunctions->writeUint32Fn = RtcpWriteUint32NoSwap;
+        pReadWriteFunctions->writeUint64Fn = RtcpWriteUint64NoSwap;
+        pReadWriteFunctions->readUint16Fn = RtcpReadUint16NoSwap;
+        pReadWriteFunctions->readUint32Fn = RtcpReadUint32NoSwap;
+        pReadWriteFunctions->readUint64Fn = RtcpReadUint64NoSwap;
     }
 }
 
