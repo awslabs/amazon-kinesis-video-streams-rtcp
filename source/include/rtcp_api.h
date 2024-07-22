@@ -18,7 +18,7 @@ RtcpResult_t Rtcp_SerializeReceiverReport( RtcpContext_t * pCtx,
                                            uint8_t * pBuffer,
                                            size_t * pBufferLength );
 
-RtcpResult_t Rtcp_DeSerializePacket( RtcpContext_t * pCtx,
+RtcpResult_t Rtcp_DeserializePacket( RtcpContext_t * pCtx,
                                      const uint8_t * pSerializedPacket,
                                      size_t serializedPacketLength,
                                      RtcpPacket_t * pRtcpPacket );

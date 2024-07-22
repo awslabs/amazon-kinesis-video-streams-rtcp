@@ -47,7 +47,7 @@ RTCP Header:
 
 1. Call `Rtcp_Init()` to initialize the RTCP Context.
 2. Pass the serialized packet, received over the wire, to the
-   `Rtcp_DeSerializePacket()` to deserialize the packet.
+   `Rtcp_DeserializePacket()` to deserialize the packet.
 3. Use one of the following APIs to further parse the deserialized packet
    according to the value of `RtcpPacket_t.header.packetType`:
     * Use `Rtcp_ParseSenderReport()` to parse the Sender Report (SR).
