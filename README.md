@@ -112,20 +112,10 @@ git submodule update --checkout --init --recursive test/CMock
 ### Steps to Generate Code Coverage Report
 
 1. Run Unit Tests in [Steps to Build and Run Unit Tests](#steps-to-build-and-run-unit-tests).
-2. Generate coverage.info in the `build` folder:
+2. Generate coverage report in the `build/coverage` folder:
 
     ```
     make coverage
-    ```
-3. Get code coverage by `lcov`:
-
-    ```
-    lcov --rc lcov_branch_coverage=1 -r coverage.info -o coverage.info '*test*' '*CMakeCCompilerId*' '*mocks*'
-    ```
-4. Generage HTML report in the folder `CodecovHTMLReport`:
-
-    ```
-    genhtml --rc lcov_branch_coverage=1 --ignore-errors source coverage.info --legend --output-directory=CodecovHTMLReport
     ```
 
 ### Script to Run Unit Test and Generate Code Coverage Report
@@ -137,8 +127,6 @@ make -C build all
 cd build
 ctest -E system --output-on-failure
 make coverage
-lcov --rc lcov_branch_coverage=1 -r coverage.info -o coverage.info '*test*' '*CMakeCCompilerId*' '*mocks*'
-genhtml --rc lcov_branch_coverage=1 --ignore-errors source coverage.info --legend --output-directory=CodecovHTMLReport
 ```
 
 ## Security

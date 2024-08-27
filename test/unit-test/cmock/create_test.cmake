@@ -20,9 +20,6 @@ function(create_test test_name
             COMPILE_FLAG "-O0 -ggdb"
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/tests"
             INSTALL_RPATH_USE_LINK_PATH TRUE
-            LINK_FLAGS " \
-                -Wl,-rpath,${CMAKE_BINARY_DIR}/lib \
-                -Wl,-rpath,${CMAKE_CURRENT_BINARY_DIR}/lib"
         )
     target_include_directories(${test_name} PUBLIC
                                ${mocks_dir}
@@ -43,7 +40,7 @@ function(create_test test_name
         add_dependencies(${test_name} ${dependency})
         target_link_libraries(${test_name} ${dependency})
     endforeach()
-    target_link_libraries(${test_name} -lgcov unity)
+    target_link_libraries(${test_name} unity)
     target_link_directories(${test_name}  PUBLIC
                             ${CMAKE_CURRENT_BINARY_DIR}/lib
             )
@@ -170,7 +167,6 @@ function(create_real_library target
         add_dependencies(${target} ${mock_name})
         target_link_libraries(${target}
                         -l${mock_name}
-                        -lgcov
                 )
     endif()
 endfunction()
