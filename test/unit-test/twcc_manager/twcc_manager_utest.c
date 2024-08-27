@@ -26,7 +26,7 @@ void test_twccAddPacket( void )
     uint16_t seqNum = 256;
     uint32_t i;
     RtcpTwccManager_t twccManager;
-    RtcpResult_t result;
+    RtcpTwccManagerResult_t result;
     TwccPacketInfo_t twccPacketInfo = { 0 };
 
     result = RtcpTwccManager_Init( &( twccManager ),
@@ -64,7 +64,7 @@ void test_twccOlderPacketInfoDeletion( void )
     uint16_t seqNum = 256;
     uint32_t i;
     RtcpTwccManager_t twccManager;
-    RtcpResult_t result;
+    RtcpTwccManagerResult_t result;
     TwccPacketInfo_t twccPacketInfo = { 0 };
     TwccPacketInfo_t foundTwccPacketInfo;
 
@@ -124,7 +124,7 @@ void test_twccFindPacket_NotFound( void )
     uint16_t seqNum = 256;
     uint32_t i;
     RtcpTwccManager_t twccManager;
-    RtcpResult_t result;
+    RtcpTwccManagerResult_t result;
     TwccPacketInfo_t twccPacketInfo = { 0 };
 
     result = RtcpTwccManager_Init( &( twccManager ),
@@ -160,7 +160,7 @@ void test_twccFindPacket_Found( void )
     uint16_t seqNum = 256;
     uint32_t i;
     RtcpTwccManager_t twccManager;
-    RtcpResult_t result;
+    RtcpTwccManagerResult_t result;
     TwccPacketInfo_t twccPacketInfo = { 0 };
     uint64_t localSentTime = time( NULL );
 
