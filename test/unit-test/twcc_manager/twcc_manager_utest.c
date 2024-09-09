@@ -5,6 +5,7 @@
 /* Standard includes. */
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 /* API includes. */
 #include "rtcp_twcc_manager.h"
@@ -15,6 +16,17 @@
 
 #define TWCC_PACKET_INFO_ARRAY_LENGTH         32
 TwccPacketInfo_t twccPacketInfoArray[ TWCC_PACKET_INFO_ARRAY_LENGTH ];
+
+void setUp( void )
+{
+    memset( &( twccPacketInfoArray[ 0 ] ),
+            0,
+            sizeof( twccPacketInfoArray ) );
+}
+
+void tearDown( void )
+{
+}
 
 /* ==============================  Test Cases  ============================== */
 
@@ -205,10 +217,10 @@ void test_twccAddPacket_Overflow( void )
     TEST_ASSERT_EQUAL( TWCC_PACKET_INFO_ARRAY_LENGTH,
                        twccManager.count );
 
-    // The first ( i.e the oldest packet is deleted, hence NOT FOUND )
+    /* The first (i.e. the oldest) packet is deleted, and hence not found. */
     result = RtcpTwccManager_FindPacketInfo( &( twccManager ),
-                                              seqNum,
-                                              &( foundTwccPacketInfo ) );
+                                             seqNum,
+                                             &( foundTwccPacketInfo ) );
 
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_PACKET_NOT_FOUND,
                        result );
@@ -233,15 +245,21 @@ void test_twccAddPacket_Overflow( void )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Validate Twcc Manager check packet deletion functionality when the added packet timestamp is less then any packet in the packetInfoArray.
+ * @brief Validate Twcc Manager check packet deletion functionality.
+ *
+ * This test validates that no packet is deleted when the added packet's
+ * timestamp is less then any packet in the packetInfoArray.
  */
 void test_twccOlderPacketInfoDeletion_AddOldPacket( void )
 {
     uint16_t seqNum = 256;
+    uint32_t i;
     RtcpTwccManager_t twccManager;
     RtcpTwccManagerResult_t result;
     TwccPacketInfo_t twccPacketInfo = { 0 };
     TwccPacketInfo_t foundTwccPacketInfo;
+    uint64_t sentTime = time( NULL );
+    size_t packetSize = ( rand() % ( 1000 ) );
 
     result = RtcpTwccManager_Init( &( twccManager ),
                                    &( twccPacketInfoArray[ 0 ] ),
@@ -250,43 +268,52 @@ void test_twccOlderPacketInfoDeletion_AddOldPacket( void )
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
 
-    twccPacketInfo.localSentTime = time( NULL );
-    twccPacketInfo.packetSize = 0;
-    twccPacketInfo.packetSeqNum += seqNum;
+    twccPacketInfo.localSentTime = sentTime;
+    twccPacketInfo.packetSize = packetSize;
+    twccPacketInfo.packetSeqNum = seqNum;
 
     result = RtcpTwccManager_AddPacketInfo( &( twccManager ),
                                             &( twccPacketInfo ) );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
 
-    twccPacketInfo.packetSize = 1;
-    twccPacketInfo.localSentTime -= RTCP_TWCC_ESTIMATOR_TIME_WINDOW;
-    twccPacketInfo.packetSeqNum += seqNum;
+    twccPacketInfo.packetSize = packetSize + 1;
+    twccPacketInfo.localSentTime = sentTime - RTCP_TWCC_ESTIMATOR_TIME_WINDOW;
+    twccPacketInfo.packetSeqNum = seqNum + 1;
 
     result = RtcpTwccManager_AddPacketInfo( &( twccManager ),
                                             &( twccPacketInfo ) );
-    TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
-                       result );
-
-    /* The last added packet added will have a less time-stamp hence no packet will get deleted */
-    result = RtcpTwccManager_FindPacketInfo( &( twccManager ),
-                                             twccPacketInfo.packetSeqNum,
-                                             &( foundTwccPacketInfo ) );
 
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
-    TEST_ASSERT_EQUAL( twccPacketInfo.packetSize,
-                       foundTwccPacketInfo.packetSize );
-    TEST_ASSERT_EQUAL( twccPacketInfo.localSentTime,
-                       foundTwccPacketInfo.localSentTime );
-    TEST_ASSERT_EQUAL( twccPacketInfo.packetSeqNum,
-                       foundTwccPacketInfo.packetSeqNum );
+    /* The last added packet added had a less time-stamp than the previous one,
+     * hence no packet will get deleted. */
+    TEST_ASSERT_EQUAL( 2,
+                       twccManager.count );
+
+    /* Ensure that both the packets are present in the TWCC manager. */
+    for( i = 0; i < 2; i ++ )
+    {
+        result = RtcpTwccManager_FindPacketInfo( &( twccManager ),
+                                                seqNum + ( uint16_t ) i,
+                                                &( foundTwccPacketInfo ) );
+
+        TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
+                           result );
+        TEST_ASSERT_EQUAL( packetSize + i,
+                           foundTwccPacketInfo.packetSize );
+        TEST_ASSERT_EQUAL( sentTime - ( ( uint64_t ) i * RTCP_TWCC_ESTIMATOR_TIME_WINDOW ),
+                           foundTwccPacketInfo.localSentTime );
+        TEST_ASSERT_EQUAL( seqNum + i,
+                           foundTwccPacketInfo.packetSeqNum );
+    }
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Validate Twcc Manager check Older packet deletion functionality.
+ * @brief Validate Twcc Manager for Older packet deletion functionality.
  */
 void test_twccOlderPacketInfoDeletion( void )
 {
@@ -296,6 +323,8 @@ void test_twccOlderPacketInfoDeletion( void )
     RtcpTwccManagerResult_t result;
     TwccPacketInfo_t twccPacketInfo = { 0 };
     TwccPacketInfo_t foundTwccPacketInfo;
+    size_t packetSize = ( rand() % ( 1000 ) );
+    uint64_t sentTime = time( NULL );
 
     result = RtcpTwccManager_Init( &( twccManager ),
                                    &( twccPacketInfoArray[ 0 ] ),
@@ -304,23 +333,25 @@ void test_twccOlderPacketInfoDeletion( void )
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
 
-    twccPacketInfo.localSentTime = time( NULL );
-    twccPacketInfo.packetSize = 0;
-    twccPacketInfo.packetSeqNum += seqNum;
+    twccPacketInfo.localSentTime = sentTime;
+    twccPacketInfo.packetSize = packetSize;
+    twccPacketInfo.packetSeqNum = seqNum;
 
     result = RtcpTwccManager_AddPacketInfo( &( twccManager ),
                                             &( twccPacketInfo ) );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
 
     for( i = 1; i < TWCC_PACKET_INFO_ARRAY_LENGTH * 2; i++ )
     {
-        twccPacketInfo.packetSize = i;
-        twccPacketInfo.localSentTime += RTCP_TWCC_ESTIMATOR_TIME_WINDOW + 1;
-        twccPacketInfo.packetSeqNum += seqNum;
+        twccPacketInfo.packetSize = packetSize + ( size_t ) i;
+        twccPacketInfo.localSentTime = sentTime + ( ( uint64_t ) i * ( RTCP_TWCC_ESTIMATOR_TIME_WINDOW + 1 ) );
+        twccPacketInfo.packetSeqNum = seqNum + ( uint16_t ) i;
 
         result = RtcpTwccManager_AddPacketInfo( &( twccManager ),
                                                 &( twccPacketInfo ) );
+
         TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                            result );
 
@@ -361,12 +392,14 @@ void test_twccFindPacket_BadParams( void )
     result = RtcpTwccManager_FindPacketInfo( NULL,
                                              seqNum,
                                              &( twccPacketInfo ) );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_BAD_PARAM,
                        result );
 
     result = RtcpTwccManager_FindPacketInfo( &( twccManager ),
                                              seqNum,
                                              NULL );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_BAD_PARAM,
                        result );
 }
@@ -374,7 +407,7 @@ void test_twccFindPacket_BadParams( void )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Validate Twcc Manager Find packet functionality for Empty Packets.
+ * @brief Validate Twcc Manager Find packet functionality for Empty Twcc Manager.
  */
 void test_twccFindPacket_Empty( void )
 {
@@ -387,6 +420,7 @@ void test_twccFindPacket_Empty( void )
     result = RtcpTwccManager_Init( &( twccManager ),
                                    &( twccPacketInfoArray[ 0 ] ),
                                    TWCC_PACKET_INFO_ARRAY_LENGTH );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
     TEST_ASSERT_EQUAL( 0,
@@ -406,7 +440,7 @@ void test_twccFindPacket_Empty( void )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Validate Twcc Manager Find packet functionality for Non-retrival.
+ * @brief Validate Twcc Manager Find packet functionality for non-existant sequence numbers.
  */
 void test_twccFindPacket_NotFound( void )
 {
@@ -419,6 +453,7 @@ void test_twccFindPacket_NotFound( void )
     result = RtcpTwccManager_Init( &( twccManager ),
                                    &( twccPacketInfoArray[ 0 ] ),
                                    TWCC_PACKET_INFO_ARRAY_LENGTH );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
 
@@ -426,19 +461,21 @@ void test_twccFindPacket_NotFound( void )
     {
         twccPacketInfo.packetSize = i;
         twccPacketInfo.localSentTime = time( NULL );
-        twccPacketInfo.packetSeqNum += seqNum;
+        twccPacketInfo.packetSeqNum = seqNum + ( uint16_t ) i;
+
         result = RtcpTwccManager_AddPacketInfo( &( twccManager ),
                                                 &( twccPacketInfo ) );
+
         TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                            result );
+        TEST_ASSERT_EQUAL( i + 1,
+                           twccManager.count );
     }
-
-    TEST_ASSERT_EQUAL( TWCC_PACKET_INFO_ARRAY_LENGTH,
-                       twccManager.count );
 
     result = RtcpTwccManager_FindPacketInfo( &( twccManager ),
                                              2,
                                              &( twccPacketInfo ) );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_PACKET_NOT_FOUND,
                        result );
 }
@@ -446,81 +483,33 @@ void test_twccFindPacket_NotFound( void )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Validate Twcc Manager Find packet functionality.
- */
-void test_twccFindPacket_Found( void )
-{
-    uint16_t seqNum = 256;
-    uint32_t i;
-    RtcpTwccManager_t twccManager;
-    RtcpTwccManagerResult_t result;
-    TwccPacketInfo_t twccPacketInfo = { 0 };
-    uint64_t localSentTime = time( NULL );
-
-    result = RtcpTwccManager_Init( &( twccManager ),
-                                   &( twccPacketInfoArray[ 0 ] ),
-                                   TWCC_PACKET_INFO_ARRAY_LENGTH );
-    TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
-                       result );
-
-    for( i = 0; i < TWCC_PACKET_INFO_ARRAY_LENGTH; i++ )
-    {
-        twccPacketInfo.packetSize = i;
-        twccPacketInfo.localSentTime = localSentTime + ( int64_t ) i;
-        twccPacketInfo.packetSeqNum += seqNum;
-        result = RtcpTwccManager_AddPacketInfo( &( twccManager ),
-                                                &( twccPacketInfo ) );
-        TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
-                           result );
-    }
-
-    TEST_ASSERT_EQUAL( TWCC_PACKET_INFO_ARRAY_LENGTH,
-                       twccManager.count );
-
-    for( i = 0; i < TWCC_PACKET_INFO_ARRAY_LENGTH; i++ )
-    {
-        result = RtcpTwccManager_FindPacketInfo( &( twccManager ),
-                                                 seqNum * ( i + 1 ),
-                                                 &( twccPacketInfo ) );
-
-        TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
-                           result );
-        TEST_ASSERT_EQUAL( i,
-                           twccPacketInfo.packetSize );
-        TEST_ASSERT_EQUAL( seqNum * ( i + 1 ),
-                           twccPacketInfo.packetSeqNum );
-        TEST_ASSERT_EQUAL( localSentTime + ( int64_t ) i,
-                           twccPacketInfo.localSentTime );
-    }
-}
-
-/*-----------------------------------------------------------*/
-
-/**
- * @brief Validate Twcc Manager Handle packet fail functionality for Bad Parameter.
+ * @brief Validate Twcc Manager Handle packet fail functionality for bad parameters.
  */
 void test_twccHandlePacket_BadParams( void )
 {
     RtcpTwccManager_t twccManager;
     RtcpTwccManagerResult_t result;
-    RtcpTwccPacket_t twccPacket;
+    RtcpTwccPacket_t twccPacket = { 0 };
     TwccBandwidthInfo_t twccBandwidthInfo = { 0 };
 
     result = RtcpTwccManager_HandleTwccPacket( NULL,
                                                &( twccPacket ),
                                                &( twccBandwidthInfo ) );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_BAD_PARAM,
                        result );
 
     result = RtcpTwccManager_HandleTwccPacket( &( twccManager ),
                                                NULL,
                                                &( twccBandwidthInfo ) );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_BAD_PARAM,
                        result );
 
     result = RtcpTwccManager_HandleTwccPacket( &( twccManager ),
                                                &( twccPacket ),
                                                NULL );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_BAD_PARAM,
                        result );
 }
@@ -528,31 +517,46 @@ void test_twccHandlePacket_BadParams( void )
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Validate Twcc Manager Handle packet functionality for No Packets.
+ * @brief Validate Twcc Manager Handle packet functionality for no packets.
  */
 void test_twccHandlePacket_NoPackets( void )
 {
     RtcpTwccManager_t twccManager;
     RtcpTwccManagerResult_t resultInitPass, result;
     RtcpTwccPacket_t twccPacket;
-    TwccBandwidthInfo_t twccBandwidthInfo = { 0 };
-    PacketArrivalInfo_t arrivalInfoList[TWCC_PACKET_INFO_ARRAY_LENGTH];
+    TwccBandwidthInfo_t twccBandwidthInfo;
+    PacketArrivalInfo_t arrivalInfoList[ TWCC_PACKET_INFO_ARRAY_LENGTH ];
 
     resultInitPass = RtcpTwccManager_Init( &( twccManager ),
                                            &( twccPacketInfoArray[ 0 ] ),
                                            TWCC_PACKET_INFO_ARRAY_LENGTH );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        resultInitPass );
 
-    // Creating a valid RtcpTwccPacket_t
+    memset( &( arrivalInfoList[ 0 ] ),
+            0,
+            TWCC_PACKET_INFO_ARRAY_LENGTH );
+
     twccPacket.arrivalInfoListLength = TWCC_PACKET_INFO_ARRAY_LENGTH;
-    twccPacket.pArrivalInfoList = arrivalInfoList;
+    twccPacket.pArrivalInfoList = &( arrivalInfoList[ 0 ] );
 
     result = RtcpTwccManager_HandleTwccPacket( &( twccManager ),
                                                &( twccPacket ),
                                                &( twccBandwidthInfo ) );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
+    TEST_ASSERT_EQUAL( 0,
+                       twccBandwidthInfo.duration );
+    TEST_ASSERT_EQUAL( 0,
+                       twccBandwidthInfo.sentBytes );
+    TEST_ASSERT_EQUAL( 0,
+                       twccBandwidthInfo.sentPackets );
+    TEST_ASSERT_EQUAL( 0,
+                       twccBandwidthInfo.receivedBytes );
+    TEST_ASSERT_EQUAL( 0,
+                       twccBandwidthInfo.receivedPackets );
 }
 
 /*-----------------------------------------------------------*/
@@ -562,109 +566,122 @@ void test_twccHandlePacket_NoPackets( void )
  */
 void test_twccHandlePacket( void )
 {
+    uint16_t seqNum = 256;
+    uint32_t i;
     RtcpTwccManager_t twccManager;
     RtcpTwccManagerResult_t result;
     RtcpTwccPacket_t twccPacket;
     TwccBandwidthInfo_t bandwidthInfo = { 0 };
     TwccPacketInfo_t packetInfo = { 0 };
-    PacketArrivalInfo_t arrivalInfoList[TWCC_PACKET_INFO_ARRAY_LENGTH];
-    uint64_t localSentTime = time( NULL );
-    uint16_t seqNum = 256;
-    size_t i;
+    PacketArrivalInfo_t arrivalInfoList[ TWCC_PACKET_INFO_ARRAY_LENGTH ];
+    size_t packetSize = ( rand() % ( 1000 ) );
+    uint64_t sentTime = time( NULL );
 
     result = RtcpTwccManager_Init( &( twccManager ),
                                    &( twccPacketInfoArray[ 0 ] ),
                                    TWCC_PACKET_INFO_ARRAY_LENGTH );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
 
-    for(i = 0; i < TWCC_PACKET_INFO_ARRAY_LENGTH; i++)
+    for( i = 0; i < TWCC_PACKET_INFO_ARRAY_LENGTH; i++ )
     {
-        packetInfo.packetSize = i;
-        packetInfo.localSentTime = localSentTime + ( int64_t )i;
-        packetInfo.packetSeqNum = seqNum - 1 + ( uint16_t )( i );
+        packetInfo.packetSize = packetSize;
+        packetInfo.localSentTime = sentTime + ( uint64_t ) i;
+        packetInfo.packetSeqNum = seqNum + ( uint16_t ) i;
+
         result = RtcpTwccManager_AddPacketInfo( &( twccManager ),
                                                 &( packetInfo ) );
+
         TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                            result );
 
-        arrivalInfoList[i].seqNum = packetInfo.packetSeqNum;
-        if( i % 2 == 0 ) {
-            arrivalInfoList[i].remoteArrivalTime = RTCP_TWCC_PACKET_LOST_TIME; // Set some packets as lost
+        arrivalInfoList[ i ].seqNum = packetInfo.packetSeqNum;
+        if( ( i % 2 ) == 0 )
+        {
+            arrivalInfoList[ i ].remoteArrivalTime = RTCP_TWCC_PACKET_LOST_TIME; /* Set half of the packets as lost. */
         }
-        else {
-            arrivalInfoList[i].remoteArrivalTime = localSentTime + ( int64_t )i; // Set some packets as received
+        else
+        {
+            arrivalInfoList[ i ].remoteArrivalTime = packetInfo.localSentTime + 1; /* Set half of the packets as received. */
         }
     }
 
-    // Creating a valid RtcpTwccPacket_t
     twccPacket.arrivalInfoListLength = TWCC_PACKET_INFO_ARRAY_LENGTH;
-    twccPacket.pArrivalInfoList = arrivalInfoList;
+    twccPacket.pArrivalInfoList = &( arrivalInfoList[ 0 ] );
 
     result = RtcpTwccManager_HandleTwccPacket( &( twccManager ),
                                                &( twccPacket ),
-                                               &bandwidthInfo );
+                                               &( bandwidthInfo ) );
 
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
-    TEST_ASSERT_GREATER_THAN( 0,
-                              bandwidthInfo.duration );
+    TEST_ASSERT_EQUAL( TWCC_PACKET_INFO_ARRAY_LENGTH - 1,
+                       bandwidthInfo.duration );
     TEST_ASSERT_EQUAL( TWCC_PACKET_INFO_ARRAY_LENGTH,
                        bandwidthInfo.sentPackets );
-    TEST_ASSERT_GREATER_THAN( 0,
-                              bandwidthInfo.sentBytes );
-    TEST_ASSERT_GREATER_THAN( 0,
-                              bandwidthInfo.receivedBytes );
+    TEST_ASSERT_EQUAL( TWCC_PACKET_INFO_ARRAY_LENGTH * packetSize,
+                       bandwidthInfo.sentBytes );
+    TEST_ASSERT_EQUAL( TWCC_PACKET_INFO_ARRAY_LENGTH / 2,
+                       bandwidthInfo.receivedPackets );
+    TEST_ASSERT_EQUAL( ( TWCC_PACKET_INFO_ARRAY_LENGTH / 2 ) * packetSize,
+                       bandwidthInfo.receivedBytes );
 }
 
 /*-----------------------------------------------------------*/
 
 /**
- * @brief Validate Twcc Manager Handle packet functionality when unidentified Sequence Number Packet is found.
+ * @brief Validate Twcc Manager Handle packet functionality when sequence number is not found in the manager.
  */
-void test_twccHandlePacket_unidentifiedSeqNum( void )
+void test_twccHandlePacket_SeqNumNotFound( void )
 {
+    uint16_t seqNum = 256;
+    uint32_t i;
     RtcpTwccManager_t twccManager;
     RtcpTwccManagerResult_t result;
     RtcpTwccPacket_t twccPacket;
     TwccBandwidthInfo_t bandwidthInfo;
     TwccPacketInfo_t packetInfo;
     PacketArrivalInfo_t arrivalInfo;
-    uint64_t localSentTime = time( NULL );
-    uint16_t seqNum = 256;
-    size_t i;
+    size_t packetSize = ( rand() % ( 1000 ) );
+    uint64_t sentTime = time( NULL );
 
-    result = RtcpTwccManager_Init( &twccManager,
-                                   &twccPacketInfoArray[0],
+    result = RtcpTwccManager_Init( &( twccManager ),
+                                   &( twccPacketInfoArray[ 0 ] ),
                                    TWCC_PACKET_INFO_ARRAY_LENGTH );
+
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
 
-    for(i = 0; i < TWCC_PACKET_INFO_ARRAY_LENGTH; i++)
+    for( i = 0; i < TWCC_PACKET_INFO_ARRAY_LENGTH; i++ )
     {
-        packetInfo.packetSize = i;
-        packetInfo.localSentTime = localSentTime + ( int64_t )i;
-        packetInfo.packetSeqNum = seqNum + ( uint16_t )i;
-        result = RtcpTwccManager_AddPacketInfo( &twccManager,
-                                                &packetInfo );
+        packetInfo.packetSize = packetSize + ( size_t ) i;
+        packetInfo.localSentTime = sentTime + ( uint64_t ) i;
+        packetInfo.packetSeqNum = seqNum + ( uint16_t ) i;
+
+        result = RtcpTwccManager_AddPacketInfo( &( twccManager ),
+                                                &( packetInfo ) );
+
         TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                            result );
     }
 
-    // Create a RtcpTwccPacket_t with a sequence number that doesn't exist in the RtcpTwccManager_t
-    twccPacket.arrivalInfoListLength = 1;
+    /* Create a RtcpTwccPacket_t with a sequence number that doesn't exist in
+     * the RtcpTwccManager_t. */
     arrivalInfo.seqNum = seqNum + TWCC_PACKET_INFO_ARRAY_LENGTH;
     arrivalInfo.remoteArrivalTime = 0;
-    twccPacket.pArrivalInfoList = &arrivalInfo;
 
-    result = RtcpTwccManager_HandleTwccPacket( &twccManager,
-                                      &twccPacket,
-                                      &bandwidthInfo );
+    twccPacket.arrivalInfoListLength = 1;
+    twccPacket.pArrivalInfoList = &( arrivalInfo );
+
+    result = RtcpTwccManager_HandleTwccPacket( &( twccManager ),
+                                               &( twccPacket ),
+                                               &( bandwidthInfo ) );
 
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        result );
-    TEST_ASSERT_GREATER_OR_EQUAL_INT( 0,
-                                      bandwidthInfo.duration );
+    TEST_ASSERT_EQUAL( 0,
+                       bandwidthInfo.duration );
     TEST_ASSERT_EQUAL( 0,
                        bandwidthInfo.sentPackets );
     TEST_ASSERT_EQUAL( 0,
