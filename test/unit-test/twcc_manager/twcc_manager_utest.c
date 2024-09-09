@@ -205,6 +205,14 @@ void test_twccAddPacket_Overflow( void )
     TEST_ASSERT_EQUAL( TWCC_PACKET_INFO_ARRAY_LENGTH,
                        twccManager.count );
 
+    // The first ( i.e the oldest packet is deleted, hence NOT FOUND )
+    result = RtcpTwccManager_FindPacketInfo( &( twccManager ),
+                                              seqNum,
+                                              &( foundTwccPacketInfo ) );
+
+    TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_PACKET_NOT_FOUND,
+                       result );
+
     for( i = 1; i <= TWCC_PACKET_INFO_ARRAY_LENGTH; i++ )
     {
         result = RtcpTwccManager_FindPacketInfo( &( twccManager ),
@@ -528,27 +536,13 @@ void test_twccHandlePacket_NoPackets( void )
     RtcpTwccManagerResult_t resultInitPass, result;
     RtcpTwccPacket_t twccPacket;
     TwccBandwidthInfo_t twccBandwidthInfo = { 0 };
-    TwccPacketInfo_t packetInfo = { 0 };
     PacketArrivalInfo_t arrivalInfoList[TWCC_PACKET_INFO_ARRAY_LENGTH];
-    uint64_t localSentTime = time( NULL );
-    uint16_t seqNum = 256;
-    size_t i;
 
     resultInitPass = RtcpTwccManager_Init( &( twccManager ),
                                            &( twccPacketInfoArray[ 0 ] ),
                                            TWCC_PACKET_INFO_ARRAY_LENGTH );
     TEST_ASSERT_EQUAL( RTCP_TWCC_MANAGER_RESULT_OK,
                        resultInitPass );
-
-    for(i = 0; i < TWCC_PACKET_INFO_ARRAY_LENGTH; i++)
-    {
-        packetInfo.packetSize = i;
-        packetInfo.localSentTime = localSentTime + ( int64_t )i;
-        packetInfo.packetSeqNum = seqNum - 1 + ( uint16_t )( i );
-
-        arrivalInfoList[i].seqNum = packetInfo.packetSeqNum;
-        arrivalInfoList[i].remoteArrivalTime = localSentTime + ( int64_t )i; // Set some packets as received
-    }
 
     // Creating a valid RtcpTwccPacket_t
     twccPacket.arrivalInfoListLength = TWCC_PACKET_INFO_ARRAY_LENGTH;
@@ -663,7 +657,7 @@ void test_twccHandlePacket_unidentifiedSeqNum( void )
     arrivalInfo.remoteArrivalTime = 0;
     twccPacket.pArrivalInfoList = &arrivalInfo;
 
-    RtcpTwccManager_HandleTwccPacket( &twccManager,
+    result = RtcpTwccManager_HandleTwccPacket( &twccManager,
                                       &twccPacket,
                                       &bandwidthInfo );
 
