@@ -137,6 +137,7 @@ void test_rtcpSerializeSenderReport_SmallBuffer( void )
     uint8_t buffer[ 10 ];
     size_t bufferLength = sizeof( buffer );
     RtcpResult_t result;
+    RtcpReceptionReport_t receptionReports[ 2 ];
 
     result = Rtcp_Init( &( context ) );
 
@@ -149,9 +150,7 @@ void test_rtcpSerializeSenderReport_SmallBuffer( void )
     senderReport.senderInfo.packetCount = PacketCount;
     senderReport.senderInfo.octetCount = OctetCount;
     senderReport.numReceptionReports = 2;
-
-    senderReport.pReceptionReports = ( RtcpReceptionReport_t * ) malloc( senderReport.numReceptionReports *
-                                                                         sizeof( RtcpReceptionReport_t ) );
+    senderReport.pReceptionReports = &( receptionReports[ 0 ] );
 
     for( i = 0; i < senderReport.numReceptionReports; i++ )
     {
@@ -171,8 +170,6 @@ void test_rtcpSerializeSenderReport_SmallBuffer( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_OUT_OF_MEMORY,
                        result );
-
-    free( senderReport.pReceptionReports );
 }
 
 /*-----------------------------------------------------------*/
@@ -188,6 +185,7 @@ void test_rtcpSerializeSenderReport( void )
     uint8_t buffer[ 256 ];
     size_t bufferLength = sizeof( buffer );
     RtcpResult_t result;
+    RtcpReceptionReport_t receptionReports[ 2 ];
     uint8_t serializedReport[] =
     {
         0x82, 0xC8, 0x00, 0x12, /* Header: V=2, P=0, RC=2, PT=SR=200, Length=18 words. */
@@ -224,8 +222,7 @@ void test_rtcpSerializeSenderReport( void )
     senderReport.senderInfo.packetCount = PacketCount;
     senderReport.senderInfo.octetCount = OctetCount;
     senderReport.numReceptionReports = 2;
-    senderReport.pReceptionReports = ( RtcpReceptionReport_t * ) malloc( senderReport.numReceptionReports *
-                                                                         sizeof( RtcpReceptionReport_t ) );
+    senderReport.pReceptionReports = &( receptionReports[ 0 ] );
 
     for( i = 0; i < senderReport.numReceptionReports; i++ )
     {
@@ -250,8 +247,6 @@ void test_rtcpSerializeSenderReport( void )
     TEST_ASSERT_EQUAL_UINT8_ARRAY( &( serializedReport[ 0 ] ),
                                    &( buffer[ 0 ] ),
                                    serializedReportLength );
-
-    free( senderReport.pReceptionReports );
 }
 
 /*-----------------------------------------------------------*/
@@ -337,6 +332,7 @@ void test_rtcpSerializeReceiverReport_SmallBuffer( void )
     uint8_t buffer[ 10 ];
     size_t bufferLength = sizeof( buffer );
     RtcpResult_t result;
+    RtcpReceptionReport_t receptionReports[ 2 ];
 
     result = Rtcp_Init( &( context ) );
 
@@ -345,9 +341,7 @@ void test_rtcpSerializeReceiverReport_SmallBuffer( void )
 
     receiverReport.senderSsrc = 0x12345678;
     receiverReport.numReceptionReports = 2;
-
-    receiverReport.pReceptionReports = ( RtcpReceptionReport_t * ) malloc( receiverReport.numReceptionReports *
-                                                                           sizeof( RtcpReceptionReport_t ) );
+    receiverReport.pReceptionReports = &( receptionReports[ 0 ] );
 
     for( i = 0; i < receiverReport.numReceptionReports; i++ )
     {
@@ -367,8 +361,6 @@ void test_rtcpSerializeReceiverReport_SmallBuffer( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_OUT_OF_MEMORY,
                        result );
-
-    free( receiverReport.pReceptionReports );
 }
 
 /*-----------------------------------------------------------*/
@@ -447,7 +439,7 @@ void test_rtcpParseFirPacket_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpFirPacket_t rtcpFirPacket;
     RtcpResult_t result;
-    uint8_t * payloadBuffer;
+    uint8_t payloadBuffer[ 6 ];
 
     result = Rtcp_ParseFirPacket( NULL,
                                   &( rtcpPacket ),
@@ -480,8 +472,7 @@ void test_rtcpParseFirPacket_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 2;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
 
     result = Rtcp_ParseFirPacket( &( context ),
                                   &( rtcpPacket ),
@@ -489,11 +480,9 @@ void test_rtcpParseFirPacket_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 
     rtcpPacket.payloadLength = 6;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParseFirPacket( &( context ),
@@ -502,7 +491,6 @@ void test_rtcpParseFirPacket_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 }
 
 /*-----------------------------------------------------------*/
@@ -554,7 +542,7 @@ void test_rtcpParsePliPacket_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpPliPacket_t rtcpPliPacket;
     RtcpResult_t result;
-    uint8_t * payloadBuffer;
+    uint8_t payloadBuffer[ 10 ];
 
     result = Rtcp_ParsePliPacket( NULL,
                                   &( rtcpPacket ),
@@ -587,8 +575,7 @@ void test_rtcpParsePliPacket_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 2;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
 
     result = Rtcp_ParsePliPacket( &( context ),
                                   &( rtcpPacket ),
@@ -596,11 +583,9 @@ void test_rtcpParsePliPacket_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 
     rtcpPacket.payloadLength = 10;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParsePliPacket( &( context ),
@@ -609,7 +594,6 @@ void test_rtcpParsePliPacket_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 }
 
 /*-----------------------------------------------------------*/
@@ -623,7 +607,7 @@ void test_rtcpParseSliPacket_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpSliPacket_t rtcpSliPacket;
     RtcpResult_t result;
-    uint8_t * payloadBuffer;
+    uint8_t payloadBuffer[ 14 ];
 
     result = Rtcp_ParseSliPacket( NULL,
                                   &( rtcpPacket ),
@@ -656,8 +640,7 @@ void test_rtcpParseSliPacket_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 2;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
 
     result = Rtcp_ParseSliPacket( &( context ),
                                   &( rtcpPacket ),
@@ -665,11 +648,9 @@ void test_rtcpParseSliPacket_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 
     rtcpPacket.payloadLength = 14;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParseSliPacket( &( context ),
@@ -678,7 +659,6 @@ void test_rtcpParseSliPacket_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 }
 
 /*-----------------------------------------------------------*/
@@ -692,7 +672,7 @@ void test_rtcpParseRembPacket_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpRembPacket_t rtcpRembPacket;
     RtcpResult_t result;
-    uint8_t * payloadBuffer;
+    uint8_t payloadBuffer [ 14 ];
 
     result = Rtcp_ParseRembPacket( NULL,
                                    &( rtcpPacket ),
@@ -725,8 +705,7 @@ void test_rtcpParseRembPacket_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 14;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParseRembPacket( &( context ),
@@ -735,7 +714,6 @@ void test_rtcpParseRembPacket_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 }
 
 /*-----------------------------------------------------------*/
@@ -749,7 +727,7 @@ void test_rtcpParseSenderReport_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpSenderReport_t rtcpSenderReport;
     RtcpResult_t result;
-    uint8_t * payloadBuffer;
+    uint8_t payloadBuffer[ 25 ];
 
     result = Rtcp_ParseSenderReport( NULL,
                                      &( rtcpPacket ),
@@ -782,8 +760,7 @@ void test_rtcpParseSenderReport_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 2;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
 
     result = Rtcp_ParseSenderReport( &( context ),
                                      &( rtcpPacket ),
@@ -791,11 +768,9 @@ void test_rtcpParseSenderReport_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 
     rtcpPacket.payloadLength = 25;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParseSenderReport( &( context ),
@@ -804,7 +779,6 @@ void test_rtcpParseSenderReport_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 }
 
 /*-----------------------------------------------------------*/
@@ -818,7 +792,7 @@ void test_rtcpParseReceiverReport_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpReceiverReport_t rtcpReceiverReport;
     RtcpResult_t result;
-    uint8_t * payloadBuffer;
+    uint8_t payloadBuffer[ 10 ];
 
     result = Rtcp_ParseReceiverReport( NULL,
                                        &( rtcpPacket ),
@@ -851,8 +825,7 @@ void test_rtcpParseReceiverReport_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 2;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
 
     result = Rtcp_ParseReceiverReport( &( context ),
                                        &( rtcpPacket ),
@@ -860,11 +833,9 @@ void test_rtcpParseReceiverReport_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 
     rtcpPacket.payloadLength = 10;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParseReceiverReport( &( context ),
@@ -873,7 +844,6 @@ void test_rtcpParseReceiverReport_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 }
 
 /*-----------------------------------------------------------*/
@@ -887,7 +857,7 @@ void test_rtcpParseNackPacket_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpNackPacket_t rtcpNackPacket;
     RtcpResult_t result;
-    uint8_t * payloadBuffer;
+    uint8_t payloadBuffer[ 40 ];
 
     result = Rtcp_ParseNackPacket( NULL,
                                    &( rtcpPacket ),
@@ -920,8 +890,7 @@ void test_rtcpParseNackPacket_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 2;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
 
     result = Rtcp_ParseNackPacket( &( context ),
                                    &( rtcpPacket ),
@@ -929,11 +898,9 @@ void test_rtcpParseNackPacket_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 
     rtcpPacket.payloadLength = 40;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParseNackPacket( &( context ),
@@ -942,7 +909,6 @@ void test_rtcpParseNackPacket_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 }
 
 /*-----------------------------------------------------------*/
@@ -956,7 +922,7 @@ void test_rtcpParseTwccPacket_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpTwccPacket_t rtcpTwccPacket;
     RtcpResult_t result;
-    uint8_t * payloadBuffer;
+    uint8_t payloadBuffer[ 20 ];
 
     result = Rtcp_ParseTwccPacket( NULL,
                                    &( rtcpPacket ),
@@ -989,8 +955,7 @@ void test_rtcpParseTwccPacket_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 2;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
 
     result = Rtcp_ParseTwccPacket( &( context ),
                                    &( rtcpPacket ),
@@ -998,11 +963,9 @@ void test_rtcpParseTwccPacket_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 
     rtcpPacket.payloadLength = 20;
-    payloadBuffer = ( uint8_t * ) malloc( rtcpPacket.payloadLength );
-    rtcpPacket.pPayload = payloadBuffer;
+    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParseTwccPacket( &( context ),
@@ -1011,7 +974,6 @@ void test_rtcpParseTwccPacket_BadParams( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
                        result );
-    free( payloadBuffer );
 }
 
 /*-----------------------------------------------------------*/
