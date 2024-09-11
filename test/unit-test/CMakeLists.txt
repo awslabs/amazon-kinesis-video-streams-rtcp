@@ -85,6 +85,7 @@ include( ${MODULE_ROOT_DIR}/test/unit-test/cmock/create_test.cmake )
 
 # Include unit-test build configuration.
 include( ${UNIT_TEST_DIR}/twcc_manager/ut.cmake )
+include( ${UNIT_TEST_DIR}/rtcp_api/ut.cmake )
 
 #  ==================================== Coverage Analysis configuration ========================================
 # Add a target for running coverage on tests.
