@@ -366,6 +366,74 @@ void test_rtcpSerializeReceiverReport_SmallBuffer( void )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Validate RTCP Serialize Receiver Report functionality.
+ */
+void test_rtcpSerializeReceiverReport( void )
+{
+    uint32_t i;
+    RtcpContext_t context;
+    RtcpReceiverReport_t receiverReport;
+    uint8_t buffer[256];
+    size_t bufferLength = sizeof( buffer );
+    RtcpResult_t result;
+    RtcpReceptionReport_t receptionReports[ 2 ];
+    uint8_t expectedBuffer[] = {
+        0x82, 0xC9, 0x00, 0x0D, /* Header */
+        0x87, 0x65, 0x43, 0x21, /* Sender SSRC */
+        /* Reception Report 1. */
+        0x00, 0x00, 0x00, 0x01, /* SSRC of first source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+        /* Reception Report 2. */
+        0x00, 0x00, 0x00, 0x02, /* SSRC of second source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+    };
+    size_t expectedLength = sizeof( expectedBuffer );
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    receiverReport.senderSsrc = 0x87654321;
+    receiverReport.numReceptionReports = 2;
+    receiverReport.pReceptionReports = &( receptionReports[ 0 ] );
+
+    for( i = 0; i < receiverReport.numReceptionReports; i++)
+    {
+        receiverReport.pReceptionReports[i].sourceSsrc = i + 1;
+        receiverReport.pReceptionReports[i].fractionLost = 0x11;
+        receiverReport.pReceptionReports[i].cumulativePacketsLost = 0xA0A1A2;
+        receiverReport.pReceptionReports[i].extendedHighestSeqNumReceived = 0xD1D2D3D4;
+        receiverReport.pReceptionReports[i].interArrivalJitter = 0xB1B2B3B4;
+        receiverReport.pReceptionReports[i].lastSR = 0xC1C2C3C4;
+        receiverReport.pReceptionReports[i].delaySinceLastSR = 0x5A5B5C5D;
+    }
+
+    result = Rtcp_SerializeReceiverReport( &( context ),
+                                           &( receiverReport ),
+                                           &( buffer[ 0 ] ),
+                                           &( bufferLength ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+    TEST_ASSERT_EQUAL( expectedLength,
+                       bufferLength );
+    TEST_ASSERT_EQUAL_UINT8_ARRAY( &( expectedBuffer[ 0 ] ),
+                                   &( buffer[ 0 ] ),
+                                   expectedLength );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Validate RTCP DeSerialize Packet fail functionality for Bad Parameters.
  */
 void test_rtcpDeSerializePacket_BadParams( void )
@@ -373,7 +441,7 @@ void test_rtcpDeSerializePacket_BadParams( void )
     RtcpContext_t context;
     uint8_t serializedPacket[ 256 ] = { 0 };
     size_t serializedPacketLength = sizeof( serializedPacket );
-    RtcpPacket_t rtcpPacket;
+    RtcpPacket_t rtcpPacket = { 0 };
     RtcpResult_t result;
 
     result = Rtcp_DeserializePacket( NULL,
@@ -411,7 +479,7 @@ void test_rtcpDeSerializePacket_SmallPacket( void )
     RtcpContext_t context;
     uint8_t serializedPacket[ 2 ] = { 0 };
     size_t serializedPacketLength = sizeof( serializedPacket );
-    RtcpPacket_t rtcpPacket;
+    RtcpPacket_t rtcpPacket = { 0 };
     RtcpResult_t result;
 
     result = Rtcp_Init( &( context ) );
@@ -426,6 +494,133 @@ void test_rtcpDeSerializePacket_SmallPacket( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_INPUT_PACKET_TOO_SMALL,
                        result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP DeSerialize fail Packet functionality for Wrong Version.
+ */
+void test_rtcpDeSerializePacket_WrongVersion( void )
+{
+    RtcpContext_t context;
+    uint8_t serializedPacket[] = {
+        0x03, 0xC9, 0x00, 0x0D, /* Header with wrong version */
+        0x87, 0x65, 0x43, 0x21, /* Sender SSRC */
+        /* ... Reception Reports ... */
+    };
+    size_t serializedPacketLength = sizeof( serializedPacket );
+    RtcpPacket_t rtcpPacket = { 0 };
+    RtcpResult_t result;
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+
+
+    result = Rtcp_DeserializePacket( &( context ),
+                                     &( serializedPacket[ 0 ] ),
+                                     serializedPacketLength,
+                                     &( rtcpPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_WRONG_VERSION,
+                       result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP DeSerialize fail Packet functionality for Malformed Packet.
+ */
+void test_rtcpDeSerializePacket_MalformedPacked( void )
+{
+    RtcpContext_t context;
+    uint8_t serializedPacket[] = {
+        0x82, 0xC9, 0x00, 0x0D, /* Header */
+        0x87, 0x65, 0x43, 0x21, /* Sender SSRC */
+        /* Reception Report 1 */
+        0x00, 0x00, 0x00, 0x01, /* SSRC of first source. */
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        /* Reception Report 2 */
+        0x00, 0x00, 0x00, 0x02, /* SSRC of second source. */
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00
+    };
+    size_t serializedPacketLength = sizeof( serializedPacket );
+    RtcpPacket_t rtcpPacket = { 0 };
+    RtcpResult_t result;
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    result = Rtcp_DeserializePacket( &( context ),
+                                     &( serializedPacket[ 0 ] ),
+                                     serializedPacketLength,
+                                     &( rtcpPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_MALFORMED_PACKET,
+                       result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP DeSerialize Packet functionality.
+ */
+void test_rtcpDeSerializePacket( void )
+{
+    RtcpContext_t context;
+    uint8_t serializedPacket[] = {
+        0x82, 0xC9, 0x00, 0x0D, /* Header */
+        0x87, 0x65, 0x43, 0x21, /* Sender SSRC */
+        /* Reception Report 1. */
+        0x00, 0x00, 0x00, 0x01, /* SSRC of first source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+        /* Reception Report 2. */
+        0x00, 0x00, 0x00, 0x02, /* SSRC of second source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+    };
+    size_t serializedPacketLength = sizeof( serializedPacket );
+    RtcpPacket_t rtcpPacket = { 0 };
+    RtcpResult_t result;
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    result = Rtcp_DeserializePacket( &( context ),
+                                     &( serializedPacket[ 0 ] ),
+                                     serializedPacketLength,
+                                     &( rtcpPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+    TEST_ASSERT_EQUAL( 0,
+                       rtcpPacket.header.padding );
+    TEST_ASSERT_EQUAL( 2,
+                       rtcpPacket.header.receptionReportCount );
+    TEST_ASSERT_EQUAL_PTR( &( serializedPacket[ 4 ] ),
+                           rtcpPacket.pPayload );
+    TEST_ASSERT_EQUAL( serializedPacketLength - 4,
+                       rtcpPacket.payloadLength );
 }
 
 /*-----------------------------------------------------------*/
@@ -599,6 +794,47 @@ void test_rtcpParsePliPacket_BadParams( void )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Validate RTCP Parse Pli Packet functionality.
+ */
+void test_rtcpParsePliPacket( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpPliPacket_t rtcpPliPacket;
+    RtcpResult_t result;
+    uint8_t pliPacketPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x87, 0x65, 0x43, 0x21  /* Media Source SSRC */
+    };
+    size_t pliPacketPayloadLength = sizeof( pliPacketPayload );
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    rtcpPacket.header.padding = 0;
+    rtcpPacket.header.receptionReportCount = 0;
+    rtcpPacket.header.packetType = RTCP_PACKET_PAYLOAD_FEEDBACK_PLI;
+    rtcpPacket.pPayload = &( pliPacketPayload[ 0 ] );
+    rtcpPacket.payloadLength = pliPacketPayloadLength;
+
+
+    result = Rtcp_ParsePliPacket( &( context ),
+                                  &( rtcpPacket ),
+                                  &( rtcpPliPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+    TEST_ASSERT_EQUAL( 0x12345678,
+                       rtcpPliPacket.senderSsrc );
+    TEST_ASSERT_EQUAL( 0x87654321,
+                       rtcpPliPacket.mediaSourceSsrc );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Validate RTCP Parse Sli Packet fail functionality for Bad Parameters.
  */
 void test_rtcpParseSliPacket_BadParams( void )
@@ -664,6 +900,76 @@ void test_rtcpParseSliPacket_BadParams( void )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Validate RTCP Parse Sli Packet functionality.
+ */
+void test_rtcpParseSliPacket( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpResult_t result;
+    uint8_t sliPacketPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x87, 0x65, 0x43, 0x21, /* Media Source SSRC */
+        0x00, 0x00, 0x00, 0x01, /* SLI Info 1 */
+        0xE0, 0xBE, 0x18, 0x9F, /* SLI Info 2 */
+    };
+    /*
+       For SLI Info 2 : SLI Info Field contains :
+       First : 13 Bits     -> 7191 = ( 1110 0000 1011 1 )
+       Number : 13 Bits    -> 6242 = ( 110 0001 1000 10 )
+       PictureID : 6 Bits  -> 31   = ( 01 1111 )
+
+       The SLI Info 2 field will look like :
+       1110 0000 1011 1110 0001 1000 1001 1111
+       E    0     B    E    1    8    9    F
+
+       Hence the Packet is : 0xE0BE189F
+     */
+    size_t sliPacketPayloadLength = sizeof( sliPacketPayload );
+    uint32_t sliInfo[ 2 ];
+    RtcpSliPacket_t rtcpSliPacket = {
+        .pSliInfos = &( sliInfo[ 0 ] ),
+        .numSliInfos = 2
+    };
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    rtcpPacket.header.padding = 0;
+    rtcpPacket.header.receptionReportCount = 0;
+    rtcpPacket.header.packetType = RTCP_PACKET_PAYLOAD_FEEDBACK_SLI;
+    rtcpPacket.pPayload = &( sliPacketPayload[ 0 ] );
+    rtcpPacket.payloadLength = sliPacketPayloadLength;
+
+    result = Rtcp_ParseSliPacket( &( context ),
+                                  &( rtcpPacket ),
+                                  &( rtcpSliPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+    TEST_ASSERT_EQUAL( 0x12345678,
+                       rtcpSliPacket.senderSsrc );
+    TEST_ASSERT_EQUAL( 0x87654321,
+                       rtcpSliPacket.mediaSourceSsrc );
+    TEST_ASSERT_EQUAL( 2,
+                       rtcpSliPacket.numSliInfos );
+    TEST_ASSERT_EQUAL( 0x00000001,
+                       rtcpSliPacket.pSliInfos[0] );
+    TEST_ASSERT_EQUAL( 0xE0Be189F,
+                       rtcpSliPacket.pSliInfos[1] );
+    TEST_ASSERT_EQUAL( 7191,
+                       RTCP_SLI_INFO_EXTRACT_FIRST( rtcpSliPacket.pSliInfos[1] ) );
+    TEST_ASSERT_EQUAL( 6242,
+                       RTCP_SLI_INFO_EXTRACT_NUMBER( rtcpSliPacket.pSliInfos[1] ) );
+    TEST_ASSERT_EQUAL( 31,
+                       RTCP_SLI_INFO_EXTRACT_PICTURE_ID( rtcpSliPacket.pSliInfos[1] ) );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Validate RTCP Parse Remb Packet fail functionality for Bad Parameters.
  */
 void test_rtcpParseRembPacket_BadParams( void )
@@ -672,7 +978,7 @@ void test_rtcpParseRembPacket_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpRembPacket_t rtcpRembPacket;
     RtcpResult_t result;
-    uint8_t payloadBuffer [ 14 ];
+    uint8_t rembPacketPayload[ 14 ];
 
     result = Rtcp_ParseRembPacket( NULL,
                                    &( rtcpPacket ),
@@ -705,7 +1011,7 @@ void test_rtcpParseRembPacket_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 14;
-    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
+    rtcpPacket.pPayload = &( rembPacketPayload[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParseRembPacket( &( context ),
@@ -713,6 +1019,157 @@ void test_rtcpParseRembPacket_BadParams( void )
                                    &( rtcpRembPacket ) );
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
+                       result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Remb Packet fail functionality for invalid packets where payload is too small.
+ */
+void test_rtcpParseRembPacket_InvalidPacket( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpRembPacket_t rtcpRembPacket = { 0 };
+    uint8_t rembPacketPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x9A, 0xBC, 0xDE, 0xF0, /* Media Source SSRC */
+        0x52, 0x45, 0x4D, 0x42  /* REMB Unique Identifier */
+    };
+    RtcpResult_t result;
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    rtcpPacket.payloadLength = 12;
+    rtcpPacket.pPayload = rembPacketPayload;
+    rtcpPacket.header.packetType = RTCP_PACKET_PAYLOAD_FEEDBACK_REMB;
+    result = Rtcp_ParseRembPacket( &( context ),
+                                   &( rtcpPacket ),
+                                   &( rtcpRembPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_INPUT_REMB_PACKET_INVALID,
+                       result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Remb Packet fail functionality for malformed packets with incorrect remb identifier.
+ */
+void test_rtcpParseRembPacket_MalformedPacket( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpRembPacket_t rtcpRembPacket = { 0 };
+    uint8_t rembPacketPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x9A, 0xBC, 0xDE, 0xF0, /* Media Source SSRC */
+        0x52, 0x45, 0x4D, 0x43, /* Incorrect REMB Unique Identifier */
+        0x02, 0x00, 0x00, 0x00, /* Num SSRC (2) and BR Exp (0) */
+        0x01, 0x02, 0x03, 0x04  /* SSRC 1 */
+    };
+    RtcpResult_t result;
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    rtcpPacket.payloadLength = 20;
+    rtcpPacket.pPayload = rembPacketPayload;
+    rtcpPacket.header.packetType = RTCP_PACKET_PAYLOAD_FEEDBACK_REMB;
+
+    result = Rtcp_ParseRembPacket( &( context ),
+                                   &( rtcpPacket ),
+                                   &( rtcpRembPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_MALFORMED_PACKET,
+                       result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Remb Packet fail functionality for invalid packets where SSRC List Length is too small.
+ */
+void test_rtcpParseRembPacket_InvalidSSRCLength( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    uint8_t rembPacketPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x9A, 0xBC, 0xDE, 0xF0, /* Media Source SSRC */
+        0x52, 0x45, 0x4D, 0x42, /* REMB Unique Identifier */
+        0x02, 0x00, 0x00, 0x00, /* Num SSRC (2) and BR Exp (0) */
+        0x01, 0x02, 0x03, 0x04, /* SSRC 1 */
+        0x05, 0x06, 0x07, 0x08  /* SSRC 2 */
+    };
+    RtcpResult_t result;
+    uint32_t ssrcList[ 1 ];
+    RtcpRembPacket_t rtcpRembPacket = {
+        .pSsrcList = &( ssrcList[ 0 ] ), /* SSRC list length too small */
+        .ssrcListLength = 1
+    };
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    rtcpPacket.payloadLength = 20;
+    rtcpPacket.pPayload = rembPacketPayload;
+    rtcpPacket.header.packetType = RTCP_PACKET_PAYLOAD_FEEDBACK_REMB;
+
+    result = Rtcp_ParseRembPacket( &( context ),
+                                   &( rtcpPacket ),
+                                   &( rtcpRembPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_INPUT_REMB_PACKET_INVALID,
+                       result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Remb Packet functionality .
+ */
+void test_rtcpParseRembPacket( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    uint8_t rembPacketPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x9A, 0xBC, 0xDE, 0xF0, /* Media Source SSRC */
+        0x52, 0x45, 0x4D, 0x42, /* REMB Unique Identifier */
+        0x02, 0x00, 0x00, 0x00, /* Num SSRC (2) and BR Exp (0) */
+        0x01, 0x02, 0x03, 0x04, /* SSRC 1 */
+        0x05, 0x06, 0x07, 0x08  /* SSRC 2 */
+    };
+    RtcpResult_t result;
+    uint32_t ssrcList[ 2 ];
+    RtcpRembPacket_t rtcpRembPacket = {
+        .pSsrcList = &( ssrcList[ 0 ] ), /* SSRC list length too small */
+        .ssrcListLength = 2
+    };
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    rtcpPacket.payloadLength = 20;
+    rtcpPacket.pPayload = rembPacketPayload;
+    rtcpPacket.header.packetType = RTCP_PACKET_PAYLOAD_FEEDBACK_REMB;
+
+    result = Rtcp_ParseRembPacket( &( context ),
+                                   &( rtcpPacket ),
+                                   &( rtcpRembPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
                        result );
 }
 
@@ -727,7 +1184,7 @@ void test_rtcpParseSenderReport_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpSenderReport_t rtcpSenderReport;
     RtcpResult_t result;
-    uint8_t payloadBuffer[ 25 ];
+    uint8_t senderReportPayload[ 25 ];
 
     result = Rtcp_ParseSenderReport( NULL,
                                      &( rtcpPacket ),
@@ -760,7 +1217,7 @@ void test_rtcpParseSenderReport_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 2;
-    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
+    rtcpPacket.pPayload = &( senderReportPayload[ 0 ] );
 
     result = Rtcp_ParseSenderReport( &( context ),
                                      &( rtcpPacket ),
@@ -770,7 +1227,7 @@ void test_rtcpParseSenderReport_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 25;
-    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
+    rtcpPacket.pPayload = &( senderReportPayload[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParseSenderReport( &( context ),
@@ -784,6 +1241,201 @@ void test_rtcpParseSenderReport_BadParams( void )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Validate RTCP Parse Sender Report fail functionality for Bad Parameters.
+ */
+void test_rtcpParseSenderReport_OutOfMemory( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpResult_t result;
+    RtcpReceptionReport_t receptionReport[ 1 ];
+    RtcpSenderReport_t rtcpSenderReport = {
+        .pReceptionReports = &( receptionReport[ 0 ] ),
+        .numReceptionReports = 1
+    };
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    uint8_t senderReportPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, /* Sender Info (ntpTime) */
+        0x99, 0xAA, 0xBB, 0xCC, /* Sender Info (rtpTime) */
+        0x00, 0x00, 0x03, 0xE8, /* Sender Info (packetCount) */
+        0x00, 0x01, 0x86, 0xA0, /* Sender Info (octetCount) */
+        /* Reception Report 1. */
+        0x00, 0x00, 0x00, 0x01, /* SSRC of first source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+        /* Reception Report 2. */
+        0x00, 0x00, 0x00, 0x02, /* SSRC of second source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+    };
+
+    rtcpPacket.payloadLength = 48;
+    rtcpPacket.pPayload = senderReportPayload;
+    rtcpPacket.header.receptionReportCount = 2;
+    rtcpPacket.header.packetType = RTCP_PACKET_SENDER_REPORT;
+
+    result = Rtcp_ParseSenderReport( &( context ),
+                                     &( rtcpPacket ),
+                                     &( rtcpSenderReport ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OUT_OF_MEMORY,
+                       result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Sender Report fail functionality for Bad Parameters.
+ */
+void test_rtcpParseSenderReport_MalformedPacket( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpResult_t result;
+    RtcpReceptionReport_t receptionReport[ 2 ];
+    RtcpSenderReport_t rtcpSenderReport = {
+        .pReceptionReports = &( receptionReport[ 0 ] ),
+        .numReceptionReports = 2
+    };
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    uint8_t senderReportPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, /* Sender Info (ntpTime) */
+        0x99, 0xAA, 0xBB, 0xCC, /* Sender Info (rtpTime) */
+        0x00, 0x00, 0x03, 0xE8, /* Sender Info (packetCount) */
+        0x00, 0x01, 0x86, 0xA0, /* Sender Info (octetCount) */
+        /* Reception Report 1. */
+        0x00, 0x00, 0x00, 0x01, /* SSRC of first source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+    };
+
+    rtcpPacket.payloadLength = 36;
+    rtcpPacket.pPayload = senderReportPayload;
+    rtcpPacket.header.receptionReportCount = 2;
+    rtcpPacket.header.packetType = RTCP_PACKET_SENDER_REPORT;
+
+    result = Rtcp_ParseSenderReport( &( context ),
+                                     &( rtcpPacket ),
+                                     &( rtcpSenderReport ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_MALFORMED_PACKET,
+                       result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Sender Report functionality.
+ */
+void test_rtcpParseSenderReport( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpResult_t result;
+    RtcpReceptionReport_t receptionReport[ 4 ];
+    RtcpSenderReport_t rtcpSenderReport = {
+        .pReceptionReports = &( receptionReport[ 0 ] ),
+        .numReceptionReports = 4
+    };
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    uint8_t senderReportPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, /* Sender Info (ntpTime) */
+        0x99, 0xAA, 0xBB, 0xCC, /* Sender Info (rtpTime) */
+        0x00, 0x00, 0x03, 0xE8, /* Sender Info (packetCount) */
+        0x00, 0x01, 0x86, 0xA0, /* Sender Info (octetCount) */
+        /* Reception Report 1. */
+        0x00, 0x00, 0x00, 0x01, /* SSRC of first source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+        /* Reception Report 2. */
+        0x00, 0x00, 0x00, 0x02, /* SSRC of second source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+        /* Reception Report 3. */
+        0x00, 0x00, 0x00, 0x03, /* SSRC of third source. */
+        0x22, 0xB0, 0xB1, 0xB2, /* Fraction lost = 0x22, Cumulative packet lost = 0xB0B1B2. */
+        0xE1, 0xE2, 0xE3, 0xE4, /* Extended highest sequence number received = 0xE1E2E3E4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Inter-arrival Jitter = 0xC1C2C3C4. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Last SR = 0xD1D2D3D4. */
+        0x6A, 0x6B, 0x6C, 0x6D, /* Delay since last SR = 0x6A6B6C6D. */
+        /* Reception Report 4. */
+        0x00, 0x00, 0x00, 0x04, /* SSRC of fourth source. */
+        0x33, 0xC0, 0xC1, 0xC2, /* Fraction lost = 0x33, Cumulative packet lost = 0xC0C1C2. */
+        0xF1, 0xF2, 0xF3, 0xF4, /* Extended highest sequence number received = 0xF1F2F3F4. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Inter-arrival Jitter = 0xD1D2D3D4. */
+        0xE1, 0xE2, 0xE3, 0xE4, /* Last SR = 0xE1E2E3E4. */
+        0x7A, 0x7B, 0x7C, 0x7D, /* Delay since last SR = 0x7A7B7C7D. */
+    };
+
+    rtcpPacket.payloadLength = 120;
+    rtcpPacket.pPayload = senderReportPayload;
+    rtcpPacket.header.receptionReportCount = 4;
+    rtcpPacket.header.packetType = RTCP_PACKET_SENDER_REPORT;
+
+    result = Rtcp_ParseSenderReport( &( context ),
+                                     &( rtcpPacket ),
+                                     &( rtcpSenderReport ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+    TEST_ASSERT_EQUAL( 0x12345678,
+                       rtcpSenderReport.senderSsrc );
+    TEST_ASSERT_EQUAL( 0x1122334455667788,
+                       rtcpSenderReport.senderInfo.ntpTime );
+    TEST_ASSERT_EQUAL( 0x99AABBCC,
+                       rtcpSenderReport.senderInfo.rtpTime );
+    TEST_ASSERT_EQUAL( 1000,
+                       rtcpSenderReport.senderInfo.packetCount );
+    TEST_ASSERT_EQUAL( 100000,
+                       rtcpSenderReport.senderInfo.octetCount );
+    TEST_ASSERT_EQUAL( 4,
+                       rtcpSenderReport.numReceptionReports );
+    TEST_ASSERT_EQUAL( 0x00000001,
+                       rtcpSenderReport.pReceptionReports[0].sourceSsrc );
+    TEST_ASSERT_EQUAL( 0x00000002,
+                       rtcpSenderReport.pReceptionReports[1].sourceSsrc );
+    TEST_ASSERT_EQUAL( 0x00000003,
+                       rtcpSenderReport.pReceptionReports[2].sourceSsrc );
+    TEST_ASSERT_EQUAL( 0x00000004,
+                       rtcpSenderReport.pReceptionReports[3].sourceSsrc );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Validate RTCP Parse Receiver Report fail functionality for Bad Parameters.
  */
 void test_rtcpParseReceiverReport_BadParams( void )
@@ -792,7 +1444,7 @@ void test_rtcpParseReceiverReport_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpReceiverReport_t rtcpReceiverReport;
     RtcpResult_t result;
-    uint8_t payloadBuffer[ 10 ];
+    uint8_t receiverReportPayload[ 10 ];
 
     result = Rtcp_ParseReceiverReport( NULL,
                                        &( rtcpPacket ),
@@ -825,7 +1477,7 @@ void test_rtcpParseReceiverReport_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 2;
-    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
+    rtcpPacket.pPayload = &( receiverReportPayload[ 0 ] );
 
     result = Rtcp_ParseReceiverReport( &( context ),
                                        &( rtcpPacket ),
@@ -835,7 +1487,7 @@ void test_rtcpParseReceiverReport_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 10;
-    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
+    rtcpPacket.pPayload = &( receiverReportPayload[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParseReceiverReport( &( context ),
@@ -849,6 +1501,163 @@ void test_rtcpParseReceiverReport_BadParams( void )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Validate RTCP Parse Receiver Report Fail functionality for out of memory.
+ */
+void test_rtcpParseReceiverReport_OutOfMemory( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpResult_t result;
+    RtcpReceptionReport_t receptionReport[ 1 ];
+    RtcpReceiverReport_t rtcpReceiverReport = {
+        .pReceptionReports = &( receptionReport[ 0 ] ),
+        .numReceptionReports = 1
+    };
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    uint8_t receiverReportPayload[] = {
+        0x87, 0x65, 0x43, 0x21, /* Sender SSRC */
+        /* Reception Report 1. */
+        0x00, 0x00, 0x00, 0x01, /* SSRC of first source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+    };
+
+    rtcpPacket.payloadLength = 20;
+    rtcpPacket.pPayload = receiverReportPayload;
+    rtcpPacket.header.packetType = RTCP_PACKET_RECEIVER_REPORT;
+    rtcpPacket.header.receptionReportCount = 2;
+
+    result = Rtcp_ParseReceiverReport( &( context ),
+                                       &( rtcpPacket ),
+                                       &( rtcpReceiverReport ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OUT_OF_MEMORY,
+                       result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Receiver Report Fail functionality for malformed packet.
+ */
+void test_rtcpParseReceiverReport_MalformedPacket( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpResult_t result;
+    RtcpReceptionReport_t receptionReport[ 2 ];
+    RtcpReceiverReport_t rtcpReceiverReport = {
+        .pReceptionReports = &( receptionReport[ 0 ] ),
+        .numReceptionReports = 2
+    };
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    uint8_t receiverReportPayload[] = {
+        0x87, 0x65, 0x43, 0x21, /* Sender SSRC */
+        /* Reception Report 1. */
+        0x00, 0x00, 0x00, 0x01, /* SSRC of first source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+        /* Reception Report 2. */
+        0x00, 0x00, 0x00, 0x02, /* SSRC of second source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+    };
+
+    rtcpPacket.payloadLength = 20;
+    rtcpPacket.pPayload = receiverReportPayload;
+    rtcpPacket.header.packetType = RTCP_PACKET_RECEIVER_REPORT;
+    rtcpPacket.header.receptionReportCount = 2;
+
+    result = Rtcp_ParseReceiverReport( &( context ),
+                                       &( rtcpPacket ),
+                                       &( rtcpReceiverReport ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_MALFORMED_PACKET,
+                       result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Receiver Report functionality.
+ */
+void test_rtcpParseReceiverReport( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpResult_t result;
+    RtcpReceptionReport_t receptionReport[ 2 ];
+    RtcpReceiverReport_t rtcpReceiverReport = {
+        .pReceptionReports = &( receptionReport[ 0 ] ),
+        .numReceptionReports = 2
+    };
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    uint8_t receiverReportPayload[] = {
+        0x87, 0x65, 0x43, 0x21, /* Sender SSRC */
+        /* Reception Report 1. */
+        0x00, 0x00, 0x00, 0x01, /* SSRC of first source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+        /* Reception Report 2. */
+        0x00, 0x00, 0x00, 0x02, /* SSRC of second source. */
+        0x11, 0xA0, 0xA1, 0xA2, /* Fraction lost = 0x11, Cumulative packet lost = 0xA0A1A2. */
+        0xD1, 0xD2, 0xD3, 0xD4, /* Extended highest sequence number received = 0xD1D2D3D4. */
+        0xB1, 0xB2, 0xB3, 0xB4, /* Inter-arrival Jitter = 0xB1B2B3B4. */
+        0xC1, 0xC2, 0xC3, 0xC4, /* Last SR = 0xC1C2C3C4. */
+        0x5A, 0x5B, 0x5C, 0x5D, /* Delay since last SR = 0x5A5B5C5D. */
+    };
+
+    rtcpPacket.payloadLength = 52;
+    rtcpPacket.pPayload = receiverReportPayload;
+    rtcpPacket.header.packetType = RTCP_PACKET_RECEIVER_REPORT;
+    rtcpPacket.header.receptionReportCount = 2;
+
+    result = Rtcp_ParseReceiverReport( &( context ),
+                                       &( rtcpPacket ),
+                                       &( rtcpReceiverReport ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+    TEST_ASSERT_EQUAL( 0x87654321,
+                       rtcpReceiverReport.senderSsrc );
+    TEST_ASSERT_EQUAL( 2,
+                       rtcpReceiverReport.numReceptionReports );
+    TEST_ASSERT_EQUAL( 0x00000001,
+                       rtcpReceiverReport.pReceptionReports[0].sourceSsrc );
+    TEST_ASSERT_EQUAL( 0x00000002,
+                       rtcpReceiverReport.pReceptionReports[1].sourceSsrc );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Validate RTCP Parse Nack Packet fail functionality for Bad Parameters.
  */
 void test_rtcpParseNackPacket_BadParams( void )
@@ -857,7 +1666,7 @@ void test_rtcpParseNackPacket_BadParams( void )
     RtcpPacket_t rtcpPacket = { 0 };
     RtcpNackPacket_t rtcpNackPacket;
     RtcpResult_t result;
-    uint8_t payloadBuffer[ 40 ];
+    uint8_t nackPacketPayload[ 40 ];
 
     result = Rtcp_ParseNackPacket( NULL,
                                    &( rtcpPacket ),
@@ -890,7 +1699,7 @@ void test_rtcpParseNackPacket_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 2;
-    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
+    rtcpPacket.pPayload = &( nackPacketPayload[ 0 ] );
 
     result = Rtcp_ParseNackPacket( &( context ),
                                    &( rtcpPacket ),
@@ -900,7 +1709,7 @@ void test_rtcpParseNackPacket_BadParams( void )
                        result );
 
     rtcpPacket.payloadLength = 40;
-    rtcpPacket.pPayload = &( payloadBuffer[ 0 ] );
+    rtcpPacket.pPayload = &( nackPacketPayload[ 0 ] );
     rtcpPacket.header.packetType = RTCP_PACKET_UNKNOWN;
 
     result = Rtcp_ParseNackPacket( &( context ),
@@ -908,6 +1717,173 @@ void test_rtcpParseNackPacket_BadParams( void )
                                    &( rtcpNackPacket ) );
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_BAD_PARAM,
+                       result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Nack Packet functionality.
+ */
+void test_rtcpParseNackPacket( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpResult_t result;
+    uint16_t seqNumList[ 5 ];
+    RtcpNackPacket_t rtcpNackPacket = {
+        .pSeqNumList = &( seqNumList[ 0 ] ),
+        .seqNumListLength = 5
+    };
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    uint8_t nackPacketPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x9A, 0xBC, 0xDE, 0xF0, /* Media Source SSRC */
+        0x06, 0x3B, 0x0A, 0x09  /* Sequence Number 1 */
+
+    };
+    /*
+       For NACK Sequence 1 : NACK Sequence Field contains :
+       PID(RTP SeqNum) :                16 Bits     -> 1595 
+       BLP(Bitmask of Lost Packets) :   16 Bits     -> ( 000 1010 0000 1001 )
+       
+       BLP : 
+       MSB                  LSB
+       ( 000 1010 0000 1001 )
+
+       Total SeqNum Lost: 
+       PID --> 1595
+       PID + 1  --> 1596
+       PID + 4  --> 1599
+       PID + 10 --> 1605
+       PID + 12 --> 1607
+
+       The NACK Sequence 1 field will look like :
+       <-------PID------> 0000 1010 0000 1001
+       0    6     3    B   0    A    0    9
+     */
+    rtcpPacket.payloadLength = 12;
+    rtcpPacket.pPayload = nackPacketPayload;
+    rtcpPacket.header.packetType = RTCP_PACKET_TRANSPORT_FEEDBACK_NACK;
+
+    result = Rtcp_ParseNackPacket( &( context ),
+                                   &( rtcpPacket ),
+                                   &( rtcpNackPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+    TEST_ASSERT_EQUAL( 0x12345678,
+                       rtcpNackPacket.senderSsrc );
+    TEST_ASSERT_EQUAL( 0x9ABCDEF0,
+                       rtcpNackPacket.mediaSourceSsrc );
+    TEST_ASSERT_EQUAL(5, rtcpNackPacket.seqNumListLength);
+    TEST_ASSERT_EQUAL( 1595,
+                       rtcpNackPacket.pSeqNumList[0] );
+    TEST_ASSERT_EQUAL( 1596,
+                       rtcpNackPacket.pSeqNumList[1] );
+    TEST_ASSERT_EQUAL( 1599,
+                       rtcpNackPacket.pSeqNumList[2] );
+    TEST_ASSERT_EQUAL( 1605,
+                       rtcpNackPacket.pSeqNumList[3] );
+    TEST_ASSERT_EQUAL( 1607,
+                       rtcpNackPacket.pSeqNumList[4] );
+
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Nack Packet functionality.
+ */
+void test_rtcpParseNackPacket_EmptySequenceList( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpNackPacket_t rtcpNackPacket = {
+        .pSeqNumList = NULL
+    };
+    RtcpResult_t result;
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    uint8_t nackPacketPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x9A, 0xBC, 0xDE, 0xF0, /* Media Source SSRC */
+        0x00, 0x01, 0x00, 0x03, /* Sequence Number 1, Bitmask 0x0003      Total Lost packets = 3 ( PID + 2 of BLP )*/  
+        0x00, 0x04, 0x00, 0x01  /* Sequence Number 4  Bitmask 0x0001      Total Lost packets = 2 ( PID + 1 of BLP )*/
+    };
+
+    rtcpPacket.payloadLength = 16;
+    rtcpPacket.pPayload = nackPacketPayload;
+    rtcpPacket.header.packetType = RTCP_PACKET_TRANSPORT_FEEDBACK_NACK;
+
+    result = Rtcp_ParseNackPacket( &( context ),
+                                   &( rtcpPacket ),
+                                   &( rtcpNackPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+    TEST_ASSERT_EQUAL( 0x12345678,
+                       rtcpNackPacket.senderSsrc );
+    TEST_ASSERT_EQUAL( 0x9ABCDEF0,
+                       rtcpNackPacket.mediaSourceSsrc );
+    TEST_ASSERT_EQUAL(5, rtcpNackPacket.seqNumListLength);
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Nack Packet fail functionality for out of memory.
+ */
+void test_rtcpParseNackPacket_OutOfMemory( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpResult_t result;
+    uint16_t seqNumList[ 2 ];
+    RtcpNackPacket_t rtcpNackPacket = {
+        .pSeqNumList = &( seqNumList[ 0 ] ),
+        .seqNumListLength = 2
+    };
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    uint8_t nackPacketPayload[] = {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC */
+        0x9A, 0xBC, 0xDE, 0xF0, /* Media Source SSRC */
+        0x00, 0x01, 0x00, 0x03, /* Sequence Number 1, Bitmask 0x0003 */
+        0x00, 0x04, 0x00, 0x01  /* Sequence Number 4 */
+    };
+
+    rtcpPacket.payloadLength = 16;
+    rtcpPacket.pPayload = nackPacketPayload;
+    rtcpPacket.header.packetType = RTCP_PACKET_TRANSPORT_FEEDBACK_NACK;
+
+    result = Rtcp_ParseNackPacket( &( context ),
+                                   &( rtcpPacket ),
+                                   &( rtcpNackPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OUT_OF_MEMORY,
+                       result );
+
+    rtcpNackPacket.seqNumListLength = 1;
+
+    result = Rtcp_ParseNackPacket( &( context ),
+                                   &( rtcpPacket ),
+                                   &( rtcpNackPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OUT_OF_MEMORY,
                        result );
 }
 
