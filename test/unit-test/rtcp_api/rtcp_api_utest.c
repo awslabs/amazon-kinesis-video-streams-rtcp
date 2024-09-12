@@ -535,13 +535,14 @@ void test_rtcpDeSerializePacket_WrongVersion( void )
  * @brief Validate RTCP DeSerialize fail Packet functionality for Malformed Packet.
  */
 
-/* This test covers when the serialized packet length is smaller than expected hence the packed is malformed. */
-
 void test_rtcpDeSerializePacket_MalformedPacked( void )
 {
     RtcpContext_t context;
     uint8_t serializedPacket[] = {
         0x82, 0xC9, 0x00, 0x0D, /* Header */
+
+        /* This test covers when the serialized packet length (48 in this case) is smaller than expected hence the packed is malformed. */
+
         0x87, 0x65, 0x43, 0x21, /* Sender SSRC */
         /* Reception Report 1 */
         0x00, 0x00, 0x00, 0x01, /* SSRC of first source. */
