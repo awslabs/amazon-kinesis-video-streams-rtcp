@@ -534,6 +534,9 @@ void test_rtcpDeSerializePacket_WrongVersion( void )
 /**
  * @brief Validate RTCP DeSerialize fail Packet functionality for Malformed Packet.
  */
+
+/* This test covers when the serialized packet length is smaller than expected hence the packed is malformed. */
+
 void test_rtcpDeSerializePacket_MalformedPacked( void )
 {
     RtcpContext_t context;
@@ -1171,6 +1174,17 @@ void test_rtcpParseRembPacket( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
                        result );
+    TEST_ASSERT_EQUAL( 0x12345678,
+                       rtcpRembPacket.senderSsrc );
+    TEST_ASSERT_EQUAL( 0x9ABCDEF0,
+                       rtcpRembPacket.mediaSourceSsrc );
+    TEST_ASSERT_EQUAL( 2,
+                       rtcpRembPacket.ssrcListLength );
+    TEST_ASSERT_EQUAL( 0x01020304,
+                       rtcpRembPacket.pSsrcList[0] );
+    TEST_ASSERT_EQUAL( 0x05060708,
+                       rtcpRembPacket.pSsrcList[1] );
+                       
 }
 
 /*-----------------------------------------------------------*/
