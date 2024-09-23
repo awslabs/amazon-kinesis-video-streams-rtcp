@@ -1148,7 +1148,7 @@ RtcpResult_t Rtcp_ParseNackPacket( RtcpContext_t * pCtx,
 
             if( pNackPacket->pSeqNumList != NULL )
             {
-                if( seqNumCount <= pNackPacket->seqNumListLength )
+                if( seqNumCount < pNackPacket->seqNumListLength )
                 {
                     pNackPacket->pSeqNumList[ seqNumCount ] = startingSeqNum;
                 }
@@ -1167,7 +1167,7 @@ RtcpResult_t Rtcp_ParseNackPacket( RtcpContext_t * pCtx,
                 {
                     if( pNackPacket->pSeqNumList != NULL )
                     {
-                        if( seqNumCount <= pNackPacket->seqNumListLength )
+                        if( seqNumCount < pNackPacket->seqNumListLength )
                         {
                             pNackPacket->pSeqNumList[ seqNumCount ] = startingSeqNum + i + 1;
                         }
