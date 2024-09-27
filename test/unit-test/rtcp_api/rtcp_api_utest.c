@@ -619,8 +619,10 @@ void test_rtcpDeSerializePacket_UNKOWN( void )
                                      serializedPacketLength,
                                      &( rtcpPacket ) );
 
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+    TEST_ASSERT_EQUAL( RTCP_RESULT_MALFORMED_PACKET,
                        result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_UNKNOWN,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
     TEST_ASSERT_EQUAL( 31,
@@ -674,6 +676,8 @@ void test_rtcpDeSerializePacket_FIR( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
                        result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_FIR,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
     TEST_ASSERT_EQUAL( 0,
@@ -726,8 +730,10 @@ void test_rtcpDeSerializePacket_FIR_Invalid( void )
                                      serializedPacketLength,
                                      &( rtcpPacket ) );
 
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+    TEST_ASSERT_EQUAL( RTCP_RESULT_MALFORMED_PACKET,
                        result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_UNKNOWN,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
     TEST_ASSERT_EQUAL( 2,
@@ -783,6 +789,8 @@ void test_rtcpDeSerializePacket_SenderReport( void )
                        result );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_SENDER_REPORT,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 2,
                        rtcpPacket.header.receptionReportCount );  /* Feedback message type (FMT) */
     TEST_ASSERT_EQUAL_PTR( &( serializedPacket[ 4 ] ),
@@ -796,7 +804,7 @@ void test_rtcpDeSerializePacket_SenderReport( void )
 /**
  * @brief Validate RTCP DeSerialize Packet functionality.
  */
-void test_rtcpDeSerializePacket_TransportSpecificFeedback( void )
+void test_rtcpDeSerializePacket_TransportSpecificFeedback_Nack( void )
 {
     RtcpContext_t context;
     uint8_t serializedPacket[] =
@@ -834,6 +842,8 @@ void test_rtcpDeSerializePacket_TransportSpecificFeedback( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
                        result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_TRANSPORT_FEEDBACK_NACK,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
     TEST_ASSERT_EQUAL( 1,
@@ -854,7 +864,7 @@ void test_rtcpDeSerializePacket_TransportSpecificFeedback_TWCC( void )
     RtcpContext_t context;
     uint8_t serializedPacket[] =
     {
-        0x8F, 0xCD, 0x00, 0x0D,  /* Header: V=2, P=0, FMT=15, PT=RR=205, Length = 0xD words. */
+        0x8F, 0xCD, 0x00, 0x0D, /* Header: V=2, P=0, FMT=15, PT=RR=205, Length = 0xD words. */
         0x87, 0x65, 0x43, 0x21, /* Sender SSRC */
         /* Reception Report 1. */
         0x00, 0x00, 0x00, 0x01, /* SSRC of first source. */
@@ -887,6 +897,8 @@ void test_rtcpDeSerializePacket_TransportSpecificFeedback_TWCC( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
                        result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_TRANSPORT_FEEDBACK_TWCC,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
     TEST_ASSERT_EQUAL( 15,
@@ -904,6 +916,7 @@ void test_rtcpDeSerializePacket_TransportSpecificFeedback_TWCC( void )
  */
 void test_rtcpDeSerializePacket_TransportSpecificFeedback_unknown( void )
 {
+    /* Thought The Packet Type is of  Transport Specific Feedback, the Feedback Message Type ( FMT ) is Unknown */
     RtcpContext_t context;
     uint8_t serializedPacket[] =
     {
@@ -938,8 +951,10 @@ void test_rtcpDeSerializePacket_TransportSpecificFeedback_unknown( void )
                                      serializedPacketLength,
                                      &( rtcpPacket ) );
 
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+    TEST_ASSERT_EQUAL( RTCP_RESULT_MALFORMED_PACKET,
                        result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_UNKNOWN,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
     TEST_ASSERT_EQUAL( 31,
@@ -955,7 +970,7 @@ void test_rtcpDeSerializePacket_TransportSpecificFeedback_unknown( void )
 /**
  * @brief Validate RTCP DeSerialize Packet functionality.
  */
-void test_rtcpDeSerializePacket_PayloadSpecificFeedback_PLI( void )
+void test_rtcpDeSerializePacket_PayloadSpecificFeedback_SLI( void )
 {
     RtcpContext_t context;
     uint8_t serializedPacket[] =
@@ -993,6 +1008,8 @@ void test_rtcpDeSerializePacket_PayloadSpecificFeedback_PLI( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
                        result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_PAYLOAD_FEEDBACK_SLI,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
     TEST_ASSERT_EQUAL( 2,
@@ -1008,7 +1025,7 @@ void test_rtcpDeSerializePacket_PayloadSpecificFeedback_PLI( void )
 /**
  * @brief Validate RTCP DeSerialize Packet functionality.
  */
-void test_rtcpDeSerializePacket_PayloadSpecificFeedback_SLI( void )
+void test_rtcpDeSerializePacket_PayloadSpecificFeedback_PLI( void )
 {
     RtcpContext_t context;
     uint8_t serializedPacket[] =
@@ -1039,6 +1056,8 @@ void test_rtcpDeSerializePacket_PayloadSpecificFeedback_SLI( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
                        result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_PAYLOAD_FEEDBACK_PLI,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
     TEST_ASSERT_EQUAL( 1,
@@ -1092,6 +1111,8 @@ void test_rtcpDeSerializePacket_PayloadSpecificFeedback_REMB( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
                        result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_PAYLOAD_FEEDBACK_REMB,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
     TEST_ASSERT_EQUAL( 15,
@@ -1143,8 +1164,10 @@ void test_rtcpDeSerializePacket_PayloadSpecificFeedback_unknown( void )
                                      serializedPacketLength,
                                      &( rtcpPacket ) );
 
-    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+    TEST_ASSERT_EQUAL( RTCP_RESULT_MALFORMED_PACKET,
                        result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_UNKNOWN,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
     TEST_ASSERT_EQUAL( 31,
@@ -1198,6 +1221,8 @@ void test_rtcpDeSerializePacket_ReceiverReport( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
                        result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_RECEIVER_REPORT,
+                       rtcpPacket.header.packetType );
     TEST_ASSERT_EQUAL( 0,
                        rtcpPacket.header.padding );
     TEST_ASSERT_EQUAL( 2,
@@ -1514,7 +1539,7 @@ void test_rtcpParseSliPacket_NullInfo( void )
      *  Even though in the payload an SLI Info is going, since the rtcpSliPacket has pSliInfos as NULL, no such SLI Info's are retrieved.
      */
     size_t sliPacketPayloadLength = sizeof( sliPacketPayload );
-    
+
 
     result = Rtcp_Init( &( context ) );
 
@@ -2693,7 +2718,7 @@ void test_rtcpParseTwccPacket_BadParams( void )
 /**
  * @brief Validate RTCP Parse Twcc Packet functionality for Run Length with Malformed Small Delta.
  */
-void test_rtcpParseTwccPacket_RunLengthChunk_SMALLDELTA_MALFORMED( void )
+void test_rtcpParseTwccPacket_RunLengthChunk_SmallDelta_Malformed( void )
 {
     RtcpContext_t context;
     RtcpPacket_t rtcpPacket;
@@ -2746,7 +2771,7 @@ void test_rtcpParseTwccPacket_RunLengthChunk_SMALLDELTA_MALFORMED( void )
 /**
  * @brief Validate RTCP Parse Twcc Packet functionality for Run Length with Malformed Big Delta.
  */
-void test_rtcpParseTwccPacket_RunLengthChunk_BIGDELTA_MALFORMED( void )
+void test_rtcpParseTwccPacket_RunLengthChunk_BigDelta_Malformed( void )
 {
     RtcpContext_t context;
     RtcpPacket_t rtcpPacket;
@@ -3052,7 +3077,7 @@ void test_rtcpParseTwccPacket_RunLengthChunk_ReservedPackets( void )
 /**
  * @brief Validate RTCP Parse Twcc Packet functionality for Status Vector Chunk with Malformed Small Delta.
  */
-void test_rtcpParseTwccPacket_StatusVectorChunk_SMALLDELTA_MALFORMED( void )
+void test_rtcpParseTwccPacket_StatusVectorChunk_SmallDelta_Makformed( void )
 {
     RtcpContext_t context;
     RtcpPacket_t rtcpPacket;
@@ -3107,7 +3132,7 @@ void test_rtcpParseTwccPacket_StatusVectorChunk_SMALLDELTA_MALFORMED( void )
 /**
  * @brief Validate RTCP Parse Twcc Packet functionality for Status Vector Chunk with Malformed Big Delta.
  */
-void test_rtcpParseTwccPacket_StatusVectorChunk_BIGDELTA_MALFORMED( void )
+void test_rtcpParseTwccPacket_StatusVectorChunk_BigDelta_Malformed( void )
 {
     RtcpContext_t context;
     RtcpPacket_t rtcpPacket;
