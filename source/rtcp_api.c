@@ -78,12 +78,6 @@
  */
 #define RTCP_SENDER_SSRC_LENGTH                     4
 #define RTCP_SENDER_INFO_LENGTH                     20
-#define RTCP_RECEPTION_REPORT_LENGTH                24
-
-#define RTCP_SENDER_REPORT_MIN_PAYLOAD_LENGTH       24
-#define RTCP_RECEIVER_REPORT_MIN_PAYLOAD_LENGTH     4
-
-#define RTCP_MAX_RECEPTION_REPORTS_IN_ONE_PACKET    31
 
 #define RTCP_FRACTION_LOST_BITMASK                  0xFF000000
 #define RTCP_FRACTION_LOST_LOCATION                 24

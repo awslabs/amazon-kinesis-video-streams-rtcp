@@ -10,6 +10,20 @@
 
 /*-----------------------------------------------------------*/
 
+/*
+ * Sender Report (SR) RFC - https://datatracker.ietf.org/doc/html/rfc3550#section-6.4.1
+ * Receiver Report (RR) RFC - https://datatracker.ietf.org/doc/html/rfc3550#section-6.4.2
+ */
+
+#define RTCP_RECEPTION_REPORT_LENGTH                24
+
+#define RTCP_SENDER_REPORT_MIN_PAYLOAD_LENGTH       24
+#define RTCP_RECEIVER_REPORT_MIN_PAYLOAD_LENGTH     4
+
+#define RTCP_MAX_RECEPTION_REPORTS_IN_ONE_PACKET    31
+
+/*-----------------------------------------------------------*/
+
 #define RTCP_TWCC_PACKET_LOST_TIME                  ( ( uint64_t ) ( -1 ) )
 #define RTCP_TWCC_PACKET_UNINITIALIZED_TIME         0
 #define RTCP_TWCC_HUNDREDS_OF_NANOS_IN_A_SECOND     10000000
