@@ -145,14 +145,14 @@ RtcpTwccManagerResult_t RtcpTwccManager_AddPacketInfo( RtcpTwccManager_t * pTwcc
 
 RtcpTwccManagerResult_t RtcpTwccManager_FindPacketInfo( RtcpTwccManager_t * pTwccManager,
                                                         uint16_t seqNum,
-                                                        TwccPacketInfo_t * pOutTwccPacketInfo )
+                                                        TwccPacketInfo_t ** ppOutTwccPacketInfo )
 {
     RtcpTwccManagerResult_t result = RTCP_TWCC_MANAGER_RESULT_OK;
     TwccPacketInfo_t * pTwccPacketInfo;
     size_t i;
 
     if( ( pTwccManager == NULL ) ||
-        ( pOutTwccPacketInfo == NULL ) )
+        ( ppOutTwccPacketInfo == NULL ) )
     {
         result = RTCP_TWCC_MANAGER_RESULT_BAD_PARAM;
     }
@@ -176,10 +176,7 @@ RtcpTwccManagerResult_t RtcpTwccManager_FindPacketInfo( RtcpTwccManager_t * pTwc
 
             if( pTwccPacketInfo->packetSeqNum == seqNum )
             {
-                pOutTwccPacketInfo->localSentTime = pTwccPacketInfo->localSentTime;
-                pOutTwccPacketInfo->packetSeqNum = pTwccPacketInfo->packetSeqNum;
-                pOutTwccPacketInfo->packetSize = pTwccPacketInfo->packetSize;
-
+                *ppOutTwccPacketInfo = pTwccPacketInfo;
                 result = RTCP_TWCC_MANAGER_RESULT_OK;
                 break;
             }
@@ -199,7 +196,7 @@ RtcpTwccManagerResult_t RtcpTwccManager_HandleTwccPacket( RtcpTwccManager_t * pT
     size_t i;
     uint8_t localStartTimeRecorded = 0;
     uint64_t localStartTime, localEndTime;
-    TwccPacketInfo_t twccPacketInfo;
+    TwccPacketInfo_t * pTwccPacketInfo;
     PacketArrivalInfo_t * pArrivalInfo;
 
     if( ( pTwccManager == NULL ) ||
@@ -223,7 +220,7 @@ RtcpTwccManagerResult_t RtcpTwccManager_HandleTwccPacket( RtcpTwccManager_t * pT
             {
                 findPacketResult = RtcpTwccManager_FindPacketInfo( pTwccManager,
                                                                    pArrivalInfo->seqNum - 1,
-                                                                   &( twccPacketInfo ) );
+                                                                   &( pTwccPacketInfo ) );
 
                 if( findPacketResult != RTCP_TWCC_MANAGER_RESULT_OK )
                 {
@@ -231,7 +228,7 @@ RtcpTwccManagerResult_t RtcpTwccManager_HandleTwccPacket( RtcpTwccManager_t * pT
                 }
                 else
                 {
-                    localStartTime = twccPacketInfo.localSentTime;
+                    localStartTime = pTwccPacketInfo->localSentTime;
                     localStartTimeRecorded = 1;
                 }
 
@@ -239,11 +236,11 @@ RtcpTwccManagerResult_t RtcpTwccManager_HandleTwccPacket( RtcpTwccManager_t * pT
                 {
                     findPacketResult = RtcpTwccManager_FindPacketInfo( pTwccManager,
                                                                        pArrivalInfo->seqNum,
-                                                                       &( twccPacketInfo ) );
+                                                                       &( pTwccPacketInfo ) );
 
                     if( findPacketResult == RTCP_TWCC_MANAGER_RESULT_OK )
                     {
-                        localStartTime = twccPacketInfo.localSentTime;
+                        localStartTime = pTwccPacketInfo->localSentTime;
                         localStartTimeRecorded = 1;
                     }
                 }
@@ -251,18 +248,18 @@ RtcpTwccManagerResult_t RtcpTwccManager_HandleTwccPacket( RtcpTwccManager_t * pT
 
             findPacketResult = RtcpTwccManager_FindPacketInfo( pTwccManager,
                                                                pArrivalInfo->seqNum,
-                                                               &( twccPacketInfo ) );
+                                                               &( pTwccPacketInfo ) );
 
             if( findPacketResult == RTCP_TWCC_MANAGER_RESULT_OK )
             {
-                localEndTime = twccPacketInfo.localSentTime;
+                localEndTime = pTwccPacketInfo->localSentTime;
                 pBandwidthInfo->duration = localEndTime - localStartTime;
-                pBandwidthInfo->sentBytes += twccPacketInfo.packetSize;
+                pBandwidthInfo->sentBytes += pTwccPacketInfo->packetSize;
                 pBandwidthInfo->sentPackets += 1;
 
                 if( pArrivalInfo->remoteArrivalTime != RTCP_TWCC_PACKET_LOST_TIME )
                 {
-                    pBandwidthInfo->receivedBytes += twccPacketInfo.packetSize;
+                    pBandwidthInfo->receivedBytes += pTwccPacketInfo->packetSize;
                     pBandwidthInfo->receivedPackets += 1;
                 }
             }
