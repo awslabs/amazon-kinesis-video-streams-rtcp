@@ -122,7 +122,7 @@ git submodule update --checkout --init --recursive test/CMock
 
 ```sh
 git submodule update --init --recursive --checkout test/CMock
-cmake -S test/unit-test -B build/ -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DBUILD_CLONE_SUBMODULES=ON -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG -DLIBRARY_LOG_LEVEL=LOG_DEBUG'
+cmake -S test/unit-test -B build/ -G "Unix Makefiles"  -DBUILD_CLONE_SUBMODULES=ON -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG -DLIBRARY_LOG_LEVEL=LOG_DEBUG'
 make -C build all
 cd build
 ctest -E system --output-on-failure

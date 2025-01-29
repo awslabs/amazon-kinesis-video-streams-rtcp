@@ -37,7 +37,8 @@ static void DeleteOlderPacketInfos( RtcpTwccManager_t * pTwccManager,
     count = pTwccManager->count;
     readIndex = pTwccManager->readIndex;
 
-    for( i = 0; i < count; i++ )
+    /* If  i == count - 1 then the newly added packet is the one to be deleted, which is never the case. Hence i < count - 1  */
+    for( i = 0; i < count - 1 ; i++ )
     {
         pTwccPacketInfo = &( pTwccManager->pTwccPacketInfoArray[ WRAP( readIndex + i,
                                                                        pTwccManager->twccPacketInfoArrayLength ) ] );
