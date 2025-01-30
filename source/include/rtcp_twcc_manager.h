@@ -56,7 +56,7 @@ RtcpTwccManagerResult_t RtcpTwccManager_AddPacketInfo( RtcpTwccManager_t * pTwcc
 
 RtcpTwccManagerResult_t RtcpTwccManager_FindPacketInfo( RtcpTwccManager_t * pTwccManager,
                                                         uint16_t seqNum,
-                                                        TwccPacketInfo_t * pOutTwccPacketInfo );
+                                                        TwccPacketInfo_t ** ppOutTwccPacketInfo );
 
 RtcpTwccManagerResult_t RtcpTwccManager_HandleTwccPacket( RtcpTwccManager_t * pTwccManager,
                                                           const RtcpTwccPacket_t * pTwccPacket,
