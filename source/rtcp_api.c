@@ -404,7 +404,8 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
     uint16_t packetsRemaining = pTwccPacket->packetStatusCount;
     uint16_t i, packetChunk, statusSymbol, numPacketsInRunLengthChunk, recvDelta;
     uint16_t remoteSeqNum, symbolSize, symbolCount, symbolList;
-    uint64_t referenceTime, remoteArrivalTime;
+    uint64_t referenceTime = 0;
+    uint64_t remoteArrivalTime = 0;
 
     remoteSeqNum = pTwccPacket->baseSeqNum;
     referenceTime = RTCP_TWCC_MS_TO_HUNDRED_OF_NANOS( pTwccPacket->referenceTime * 64 ); /* Reference time is represented in multiples of 64ms. */
