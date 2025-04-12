@@ -188,31 +188,31 @@
 #define RTCP_TWCC_PACKET_STATUS_SMALL_DELTA            1
 #define RTCP_TWCC_PACKET_STATUS_LARGE_DELTA            2
 
-#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_TYPE( packetChunk )          \
-        ( ( ( packetChunk )&RTCP_TWCC_PACKET_CHUNK_TYPE_BITMASK ) >> \
+#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_TYPE( packetChunk )              \
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_TYPE_BITMASK ) >>  \
           RTCP_TWCC_PACKET_CHUNK_TYPE_LOCATION )
 
-#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_STATUS( packetChunk )            \
-        ( ( ( packetChunk )&RTCP_TWCC_PACKET_CHUNK_STATUS_BITMASK ) >>   \
+#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_STATUS( packetChunk )                \
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_STATUS_BITMASK ) >>    \
           RTCP_TWCC_PACKET_CHUNK_STATUS_LOCATION )
 
-#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_RUN_LENGTH( packetChunk )            \
-        ( ( ( packetChunk )&RTCP_TWCC_PACKET_CHUNK_RUN_LENGTH_BITMASK ) >>   \
+#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_RUN_LENGTH( packetChunk )                \
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_RUN_LENGTH_BITMASK ) >>    \
           RTCP_TWCC_PACKET_CHUNK_RUN_LENGTH_LOCATION )
 
 #define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_SIZE( packetChunk )   \
-        ( ( ( packetChunk )&RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_BITMASK ) == 0 ? 1 : 2 )
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_BITMASK ) == 0 ? 1 : 2 )
 
 #define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_COUNT( packetChunk )   \
-        ( ( ( packetChunk )&RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_BITMASK ) == 0 ? 14 : 7 )
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_BITMASK ) == 0 ? 14 : 7 )
 
-#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_LIST( packetChunk )           \
-        ( ( ( packetChunk )&RTCP_TWCC_PACKET_CHUNK_SYMBOL_LIST_BITMASK ) >>  \
+#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_LIST( packetChunk )               \
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_SYMBOL_LIST_BITMASK ) >>   \
           RTCP_TWCC_PACKET_CHUNK_SYMBOL_LIST_LOCATION )
 
-#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_FROM_LIST( symbolList, i, symbolSize )                \
+#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_FROM_LIST( symbolList, i, symbolSize )                    \
         ( ( symbolSize ) == 1 ? ( ( ( symbolList ) >> ( 14 - ( ( i + 1 ) * ( symbolSize ) ) ) ) & 1 )   \
-                          : ( ( ( symbolList ) >> ( 14 - ( ( i + 1 ) * ( symbolSize ) ) ) ) & 3 ) )
+                              : ( ( ( symbolList ) >> ( 14 - ( ( i + 1 ) * ( symbolSize ) ) ) ) & 3 ) )
 
 #define RTCP_TWCC_MS_TO_HUNDRED_OF_NANOS( ms )  \
         ( ( ( ms ) * RTCP_TWCC_HUNDREDS_OF_NANOS_IN_A_SECOND ) / 1000 )
@@ -230,24 +230,28 @@ static RtcpPacketType_t GetRtcpPacketType( uint8_t packetType,
     switch( packetType )
     {
         case RTCP_PACKET_TYPE_FIR:
-
+        {
             if( fmt == 0 )
             {
                 ret = RTCP_PACKET_FIR;
             }
-
-            break;
+        }
+        break;
 
         case RTCP_PACKET_TYPE_SENDER_REPORT:
+        {
             ret = RTCP_PACKET_SENDER_REPORT;
-            break;
+        }
+        break;
 
         case RTCP_PACKET_TYPE_RECEIVER_REPORT:
+        {
             ret = RTCP_PACKET_RECEIVER_REPORT;
-            break;
+        }
+        break;
 
         case RTCP_PACKET_TYPE_TRANSPORT_SPECIFIC_FEEDBACK:
-
+        {
             if( fmt == RTCP_FMT_TRANSPORT_SPECIFIC_FEEDBACK_NACK )
             {
                 ret = RTCP_PACKET_TRANSPORT_FEEDBACK_NACK;
@@ -256,11 +260,11 @@ static RtcpPacketType_t GetRtcpPacketType( uint8_t packetType,
             {
                 ret = RTCP_PACKET_TRANSPORT_FEEDBACK_TWCC;
             }
-
-            break;
+        }
+        break;
 
         case RTCP_PACKET_TYPE_PAYLOAD_SPECIFIC_FEEDBACK:
-
+        {
             if( fmt == RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_PLI )
             {
                 ret = RTCP_PACKET_PAYLOAD_FEEDBACK_PLI;
@@ -273,8 +277,8 @@ static RtcpPacketType_t GetRtcpPacketType( uint8_t packetType,
             {
                 ret = RTCP_PACKET_PAYLOAD_FEEDBACK_REMB;
             }
-
-            break;
+        }
+        break;
     }
 
     return ret;
@@ -428,11 +432,13 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                 switch( statusSymbol )
                 {
                     case RTCP_TWCC_PACKET_STATUS_NOT_RECEIVED:
+                    {
                         remoteArrivalTime = RTCP_TWCC_PACKET_LOST_TIME;
-                        break;
+                    }
+                    break;
 
                     case RTCP_TWCC_PACKET_STATUS_SMALL_DELTA:
-
+                    {
                         if( currentReceiveDeltaIndex < pRtcpPacket->payloadLength )
                         {
                             recvDelta = ( uint16_t ) ( pRtcpPacket->pPayload[ currentReceiveDeltaIndex ] );
@@ -445,11 +451,11 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                         {
                             result = RTCP_RESULT_MALFORMED_PACKET;
                         }
-
-                        break;
+                    }
+                    break;
 
                     case RTCP_TWCC_PACKET_STATUS_LARGE_DELTA:
-
+                    {
                         if( ( currentReceiveDeltaIndex + 1 ) < pRtcpPacket->payloadLength )
                         {
                             recvDelta = RTCP_READ_UINT16( &( pRtcpPacket->pPayload[ currentReceiveDeltaIndex ] ) );
@@ -462,8 +468,8 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                         {
                             result = RTCP_RESULT_MALFORMED_PACKET;
                         }
-
-                        break;
+                    }
+                    break;
                 }
 
                 if( pTwccPacket->pArrivalInfoList != NULL )
@@ -502,11 +508,13 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                 switch( statusSymbol )
                 {
                     case RTCP_TWCC_PACKET_STATUS_NOT_RECEIVED:
+                    {
                         remoteArrivalTime = RTCP_TWCC_PACKET_LOST_TIME;
-                        break;
+                    }
+                    break;
 
                     case RTCP_TWCC_PACKET_STATUS_SMALL_DELTA:
-
+                    {
                         if( currentReceiveDeltaIndex < pRtcpPacket->payloadLength )
                         {
                             recvDelta = ( uint16_t ) ( pRtcpPacket->pPayload[ currentReceiveDeltaIndex ] );
@@ -519,11 +527,11 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                         {
                             result = RTCP_RESULT_MALFORMED_PACKET;
                         }
-
-                        break;
+                    }
+                    break;
 
                     case RTCP_TWCC_PACKET_STATUS_LARGE_DELTA:
-
+                    {
                         if( ( currentReceiveDeltaIndex + 1 ) < pRtcpPacket->payloadLength )
                         {
                             recvDelta = RTCP_READ_UINT16( &( pRtcpPacket->pPayload[ currentReceiveDeltaIndex ] ) );
@@ -536,8 +544,8 @@ static RtcpResult_t ParseTwccPacketChunks( RtcpContext_t * pCtx,
                         {
                             result = RTCP_RESULT_MALFORMED_PACKET;
                         }
-
-                        break;
+                    }
+                    break;
                 }
 
                 if( pTwccPacket->pArrivalInfoList != NULL )
@@ -795,7 +803,10 @@ RtcpResult_t Rtcp_DeserializePacket( RtcpContext_t * pCtx,
         {
             result = RTCP_RESULT_MALFORMED_PACKET;
         }
+    }
 
+    if( result == RTCP_RESULT_OK )
+    {
         pRtcpPacket->header.padding = ( firstWord & RTCP_HEADER_PADDING_BITMASK ) >>
                                       RTCP_HEADER_PADDING_LOCATION;
 
