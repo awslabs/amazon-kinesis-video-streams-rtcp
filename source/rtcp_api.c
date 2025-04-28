@@ -244,6 +244,12 @@ static RtcpPacketType_t GetRtcpPacketType( uint8_t packetType,
         }
         break;
 
+        case RTCP_PACKET_TYPE_SOURCE_DESCRIPTION:
+        {
+            ret = RTCP_PACKET_SOURCE_DESCRIPTION;
+        }
+        break;
+        
         case RTCP_PACKET_TYPE_TRANSPORT_SPECIFIC_FEEDBACK:
         {
             if( fmt == RTCP_FMT_TRANSPORT_SPECIFIC_FEEDBACK_NACK )
