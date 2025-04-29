@@ -10,18 +10,18 @@
 /*
  * Helper macros.
  */
-#define RTCP_WRITE_UINT16   ( pCtx->readWriteFunctions.writeUint16Fn )
-#define RTCP_WRITE_UINT32   ( pCtx->readWriteFunctions.writeUint32Fn )
-#define RTCP_WRITE_UINT64   ( pCtx->readWriteFunctions.writeUint64Fn )
-#define RTCP_READ_UINT16    ( pCtx->readWriteFunctions.readUint16Fn )
-#define RTCP_READ_UINT32    ( pCtx->readWriteFunctions.readUint32Fn )
-#define RTCP_READ_UINT64    ( pCtx->readWriteFunctions.readUint64Fn )
+#define RTCP_WRITE_UINT16    ( pCtx->readWriteFunctions.writeUint16Fn )
+#define RTCP_WRITE_UINT32    ( pCtx->readWriteFunctions.writeUint32Fn )
+#define RTCP_WRITE_UINT64    ( pCtx->readWriteFunctions.writeUint64Fn )
+#define RTCP_READ_UINT16     ( pCtx->readWriteFunctions.readUint16Fn )
+#define RTCP_READ_UINT32     ( pCtx->readWriteFunctions.readUint32Fn )
+#define RTCP_READ_UINT64     ( pCtx->readWriteFunctions.readUint64Fn )
 
 #define RTCP_BYTES_TO_WORDS( bytes )    \
-    ( ( bytes ) / 4 )
+        ( ( bytes ) / 4 )
 
 #define RTCP_WORDS_TO_BYTES( words )    \
-    ( ( words ) * 4 )
+        ( ( words ) * 4 )
 
 /*-----------------------------------------------------------*/
 
@@ -35,12 +35,12 @@
 #define RTCP_PACKET_TYPE_TRANSPORT_SPECIFIC_FEEDBACK    205 /* https://datatracker.ietf.org/doc/html/rfc4585#section-6.2 */
 #define RTCP_PACKET_TYPE_PAYLOAD_SPECIFIC_FEEDBACK      206 /* https://datatracker.ietf.org/doc/html/rfc4585#section-6.3 */
 
-#define RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_PLI      1  /* https://datatracker.ietf.org/doc/html/rfc4585#section-6.3 */
-#define RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_SLI      2  /* https://datatracker.ietf.org/doc/html/rfc4585#section-6.3 */
-#define RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_RPSI     3  /* https://datatracker.ietf.org/doc/html/rfc4585#section-6.3 */
-#define RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_REMB     15 /* https://datatracker.ietf.org/doc/html/draft-alvestrand-rmcat-remb-03#section-2.2 */
-#define RTCP_FMT_TRANSPORT_SPECIFIC_FEEDBACK_NACK   1  /* https://datatracker.ietf.org/doc/html/rfc4585#section-6.2.1 */
-#define RTCP_FMT_TRANSPORT_SPECIFIC_FEEDBACK_TWCC   15 /* https://datatracker.ietf.org/doc/html/draft-holmer-rmcat-transport-wide-cc-extensions-01#section-3.1 */
+#define RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_PLI          1   /* https://datatracker.ietf.org/doc/html/rfc4585#section-6.3 */
+#define RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_SLI          2   /* https://datatracker.ietf.org/doc/html/rfc4585#section-6.3 */
+#define RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_RPSI         3   /* https://datatracker.ietf.org/doc/html/rfc4585#section-6.3 */
+#define RTCP_FMT_PAYLOAD_SPECIFIC_FEEDBACK_REMB         15  /* https://datatracker.ietf.org/doc/html/draft-alvestrand-rmcat-remb-03#section-2.2 */
+#define RTCP_FMT_TRANSPORT_SPECIFIC_FEEDBACK_NACK       1   /* https://datatracker.ietf.org/doc/html/rfc4585#section-6.2.1 */
+#define RTCP_FMT_TRANSPORT_SPECIFIC_FEEDBACK_TWCC       15  /* https://datatracker.ietf.org/doc/html/draft-holmer-rmcat-transport-wide-cc-extensions-01#section-3.1 */
 
 /*-----------------------------------------------------------*/
 
@@ -52,23 +52,23 @@
  * |V=2|P|    FMT     |       PT      |             length         |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-#define RTCP_HEADER_LENGTH                      4
-#define RTCP_HEADER_VERSION                     2
+#define RTCP_HEADER_LENGTH                    4
+#define RTCP_HEADER_VERSION                   2
 
-#define RTCP_HEADER_VERSION_BITMASK             0xC0000000
-#define RTCP_HEADER_VERSION_LOCATION            30
+#define RTCP_HEADER_VERSION_BITMASK           0xC0000000
+#define RTCP_HEADER_VERSION_LOCATION          30
 
-#define RTCP_HEADER_PADDING_BITMASK             0x20000000
-#define RTCP_HEADER_PADDING_LOCATION            29
+#define RTCP_HEADER_PADDING_BITMASK           0x20000000
+#define RTCP_HEADER_PADDING_LOCATION          29
 
-#define RTCP_HEADER_RC_BITMASK                  0x1F000000
-#define RTCP_HEADER_RC_LOCATION                 24
+#define RTCP_HEADER_RC_BITMASK                0x1F000000
+#define RTCP_HEADER_RC_LOCATION               24
 
-#define RTCP_HEADER_PACKET_TYPE_BITMASK         0x00FF0000
-#define RTCP_HEADER_PACKET_TYPE_LOCATION        16
+#define RTCP_HEADER_PACKET_TYPE_BITMASK       0x00FF0000
+#define RTCP_HEADER_PACKET_TYPE_LOCATION      16
 
-#define RTCP_HEADER_PACKET_LENGTH_BITMASK       0x0000FFFF
-#define RTCP_HEADER_PACKET_LENGTH_LOCATION      0
+#define RTCP_HEADER_PACKET_LENGTH_BITMASK     0x0000FFFF
+#define RTCP_HEADER_PACKET_LENGTH_LOCATION    0
 
 /*-----------------------------------------------------------*/
 
@@ -92,8 +92,8 @@
  *
  * RFC - https://datatracker.ietf.org/doc/html/rfc2032#section-5.2.1
  */
-#define RTCP_FIR_PACKET_PAYLOAD_LENGTH          4
-#define RTCP_FIR_PACKET_SENDER_SSRC_OFFSET      0
+#define RTCP_FIR_PACKET_PAYLOAD_LENGTH        4
+#define RTCP_FIR_PACKET_SENDER_SSRC_OFFSET    0
 
 /*-----------------------------------------------------------*/
 
@@ -102,9 +102,9 @@
  *
  * RFC - https://datatracker.ietf.org/doc/html/rfc4585#section-6.3.1
  */
-#define RTCP_PLI_PACKET_PAYLOAD_LENGTH          8
-#define RTCP_PLI_PACKET_SENDER_SSRC_OFFSET      0
-#define RTCP_PLI_PACKET_MEDIA_SSRC_OFFSET       4
+#define RTCP_PLI_PACKET_PAYLOAD_LENGTH        8
+#define RTCP_PLI_PACKET_SENDER_SSRC_OFFSET    0
+#define RTCP_PLI_PACKET_MEDIA_SSRC_OFFSET     4
 
 /*-----------------------------------------------------------*/
 
@@ -113,7 +113,7 @@
  *
  * RFC - https://datatracker.ietf.org/doc/html/rfc4585#section-6.3.2
  */
-#define RTCP_SLI_PACKET_MIN_PAYLOAD_LENGTH      12
+#define RTCP_SLI_PACKET_MIN_PAYLOAD_LENGTH    12
 
 /*-----------------------------------------------------------*/
 
@@ -122,19 +122,19 @@
  *
  * RFC - https://datatracker.ietf.org/doc/html/draft-alvestrand-rmcat-remb-03#section-2.2
  */
-#define RTCP_REMB_PACKET_MIN_PAYLOAD_LENGTH     20
-#define RTCP_REMB_PACKET_IDENTIFIER_OFFSET      8
-#define RTCP_REMB_PACKET_IDENTIFIER_LENGTH      4
-#define RTCP_REMB_PACKET_NUM_SSRC_OFFSET        12
+#define RTCP_REMB_PACKET_MIN_PAYLOAD_LENGTH      20
+#define RTCP_REMB_PACKET_IDENTIFIER_OFFSET       8
+#define RTCP_REMB_PACKET_IDENTIFIER_LENGTH       4
+#define RTCP_REMB_PACKET_NUM_SSRC_OFFSET         12
 
-#define RTCP_REMB_PACKET_NUM_SSRC_BITMASK       0xFF000000
-#define RTCP_REMB_PACKET_NUM_SSRC_LOCATION      24
+#define RTCP_REMB_PACKET_NUM_SSRC_BITMASK        0xFF000000
+#define RTCP_REMB_PACKET_NUM_SSRC_LOCATION       24
 
-#define RTCP_REMB_PACKET_BR_EXPONENT_BITMASK    0x00FC0000
-#define RTCP_REMB_PACKET_BR_EXPONENT_LOCATION   18
+#define RTCP_REMB_PACKET_BR_EXPONENT_BITMASK     0x00FC0000
+#define RTCP_REMB_PACKET_BR_EXPONENT_LOCATION    18
 
-#define RTCP_REMB_PACKET_BR_MANTISSA_BITMASK    0x0003FFFF
-#define RTCP_REMB_PACKET_BR_MANTISSA_LOCATION   0
+#define RTCP_REMB_PACKET_BR_MANTISSA_BITMASK     0x0003FFFF
+#define RTCP_REMB_PACKET_BR_MANTISSA_LOCATION    0
 
 /*-----------------------------------------------------------*/
 
@@ -143,7 +143,7 @@
  *
  * RFC - https://datatracker.ietf.org/doc/html/rfc4585#section-6.2.1
  */
-#define RTCP_NACK_PACKET_MIN_PAYLOAD_LENGTH     12
+#define RTCP_NACK_PACKET_MIN_PAYLOAD_LENGTH    12
 
 /*-----------------------------------------------------------*/
 
@@ -152,67 +152,67 @@
  *
  * RFC - https://datatracker.ietf.org/doc/html/draft-holmer-rmcat-transport-wide-cc-extensions-01#section-3.1
  */
-#define RTCP_TWCC_PACKET_MIN_PAYLOAD_LENGTH         18
+#define RTCP_TWCC_PACKET_MIN_PAYLOAD_LENGTH            18
 
-#define RTCP_TWCC_REFERENCE_TIME_BITMASK            0xFFFFFF00
-#define RTCP_TWCC_REFERENCE_TIME_LOCATION           8
+#define RTCP_TWCC_REFERENCE_TIME_BITMASK               0xFFFFFF00
+#define RTCP_TWCC_REFERENCE_TIME_LOCATION              8
 
-#define RTCP_TWCC_FEEDBACK_PACKET_COUNT_BITMASK     0x000000FF
-#define RTCP_TWCC_FEEDBACK_PACKET_COUNT_LOCATION    0
+#define RTCP_TWCC_FEEDBACK_PACKET_COUNT_BITMASK        0x000000FF
+#define RTCP_TWCC_FEEDBACK_PACKET_COUNT_LOCATION       0
 
-#define RTCP_TWCC_PACKET_CHUNK_TYPE_BITMASK         0x8000
-#define RTCP_TWCC_PACKET_CHUNK_TYPE_LOCATION        15
+#define RTCP_TWCC_PACKET_CHUNK_TYPE_BITMASK            0x8000
+#define RTCP_TWCC_PACKET_CHUNK_TYPE_LOCATION           15
 
-#define RTCP_TWCC_PACKET_CHUNK_STATUS_BITMASK       0x6000
-#define RTCP_TWCC_PACKET_CHUNK_STATUS_LOCATION      13
+#define RTCP_TWCC_PACKET_CHUNK_STATUS_BITMASK          0x6000
+#define RTCP_TWCC_PACKET_CHUNK_STATUS_LOCATION         13
 
-#define RTCP_TWCC_PACKET_CHUNK_RUN_LENGTH_BITMASK   0x1FFF
-#define RTCP_TWCC_PACKET_CHUNK_RUN_LENGTH_LOCATION  0
+#define RTCP_TWCC_PACKET_CHUNK_RUN_LENGTH_BITMASK      0x1FFF
+#define RTCP_TWCC_PACKET_CHUNK_RUN_LENGTH_LOCATION     0
 
-#define RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_BITMASK  0x4000
-#define RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_LOCATION 14
+#define RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_BITMASK     0x4000
+#define RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_LOCATION    14
 
-#define RTCP_TWCC_PACKET_CHUNK_SYMBOL_LIST_BITMASK  0x3FFF
-#define RTCP_TWCC_PACKET_CHUNK_SYMBOL_LIST_LOCATION 0
+#define RTCP_TWCC_PACKET_CHUNK_SYMBOL_LIST_BITMASK     0x3FFF
+#define RTCP_TWCC_PACKET_CHUNK_SYMBOL_LIST_LOCATION    0
 
-#define RTCP_TWCC_PACKET_CHUNK_TYPE_RUN_LENGTH      0
-#define RTCP_TWCC_PACKET_CHUNK_TYPE_STATUS_VECTOR   1
+#define RTCP_TWCC_PACKET_CHUNK_TYPE_RUN_LENGTH         0
+#define RTCP_TWCC_PACKET_CHUNK_TYPE_STATUS_VECTOR      1
 
-#define RTCP_TWCC_PACKET_STATUS_NOT_RECEIVED        0
-#define RTCP_TWCC_PACKET_STATUS_SMALL_DELTA         1
-#define RTCP_TWCC_PACKET_STATUS_LARGE_DELTA         2
+#define RTCP_TWCC_PACKET_STATUS_NOT_RECEIVED           0
+#define RTCP_TWCC_PACKET_STATUS_SMALL_DELTA            1
+#define RTCP_TWCC_PACKET_STATUS_LARGE_DELTA            2
 
-#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_TYPE( packetChunk )          \
-    ( ( ( packetChunk ) &  RTCP_TWCC_PACKET_CHUNK_TYPE_BITMASK ) >> \
-      RTCP_TWCC_PACKET_CHUNK_TYPE_LOCATION )
+#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_TYPE( packetChunk )              \
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_TYPE_BITMASK ) >>  \
+          RTCP_TWCC_PACKET_CHUNK_TYPE_LOCATION )
 
-#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_STATUS( packetChunk )            \
-    ( ( ( packetChunk ) &  RTCP_TWCC_PACKET_CHUNK_STATUS_BITMASK ) >>   \
-      RTCP_TWCC_PACKET_CHUNK_STATUS_LOCATION )
+#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_STATUS( packetChunk )                \
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_STATUS_BITMASK ) >>    \
+          RTCP_TWCC_PACKET_CHUNK_STATUS_LOCATION )
 
-#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_RUN_LENGTH( packetChunk )            \
-    ( ( ( packetChunk ) &  RTCP_TWCC_PACKET_CHUNK_RUN_LENGTH_BITMASK ) >>   \
-      RTCP_TWCC_PACKET_CHUNK_RUN_LENGTH_LOCATION )
+#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_RUN_LENGTH( packetChunk )                \
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_RUN_LENGTH_BITMASK ) >>    \
+          RTCP_TWCC_PACKET_CHUNK_RUN_LENGTH_LOCATION )
 
 #define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_SIZE( packetChunk )   \
-    ( ( ( packetChunk ) &  RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_BITMASK ) == 0 ? 1 : 2 )
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_BITMASK ) == 0 ? 1 : 2 )
 
 #define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_COUNT( packetChunk )   \
-    ( ( ( packetChunk ) &  RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_BITMASK ) == 0 ? 14 : 7 )
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_SYMBOL_SIZE_BITMASK ) == 0 ? 14 : 7 )
 
-#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_LIST( packetChunk )           \
-    ( ( ( packetChunk ) &  RTCP_TWCC_PACKET_CHUNK_SYMBOL_LIST_BITMASK ) >>  \
-      RTCP_TWCC_PACKET_CHUNK_SYMBOL_LIST_LOCATION )
+#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_LIST( packetChunk )               \
+        ( ( ( packetChunk ) & RTCP_TWCC_PACKET_CHUNK_SYMBOL_LIST_BITMASK ) >>   \
+          RTCP_TWCC_PACKET_CHUNK_SYMBOL_LIST_LOCATION )
 
-#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_FROM_LIST( symbolList, i, symbolSize )                \
-    ( ( symbolSize ) == 1 ? ( ( ( symbolList ) >> ( 14 - ( ( i + 1 ) * ( symbolSize ) ) ) ) & 1 )   \
-                          : ( ( ( symbolList ) >> ( 14 - ( ( i + 1 ) * ( symbolSize ) ) ) ) & 3 ) )
+#define RTCP_TWCC_PACKET_CHUNK_EXTRACT_SYMBOL_FROM_LIST( symbolList, i, symbolSize )                    \
+        ( ( symbolSize ) == 1 ? ( ( ( symbolList ) >> ( 14 - ( ( i + 1 ) * ( symbolSize ) ) ) ) & 1 )   \
+                              : ( ( ( symbolList ) >> ( 14 - ( ( i + 1 ) * ( symbolSize ) ) ) ) & 3 ) )
 
 #define RTCP_TWCC_MS_TO_HUNDRED_OF_NANOS( ms )  \
-    ( ( ( ms ) * RTCP_TWCC_HUNDREDS_OF_NANOS_IN_A_SECOND ) / 1000 )
+        ( ( ( ms ) * RTCP_TWCC_HUNDREDS_OF_NANOS_IN_A_SECOND ) / 1000 )
 
 #define RTCP_TWCC_US_TO_HUNDRED_OF_NANOS( us )  \
-    ( ( ( us ) * RTCP_TWCC_HUNDREDS_OF_NANOS_IN_A_SECOND ) / 1000000 )
+        ( ( ( us ) * RTCP_TWCC_HUNDREDS_OF_NANOS_IN_A_SECOND ) / 1000000 )
 
 /*-----------------------------------------------------------*/
 
@@ -659,7 +659,7 @@ RtcpResult_t Rtcp_SerializeSenderReport( RtcpContext_t * pCtx,
         for( i = 0; i < pSenderReport->numReceptionReports; i++ )
         {
             WriteReceptionReport( pCtx,
-                                  &( pSenderReport->pReceptionReports[ i ]  ),
+                                  &( pSenderReport->pReceptionReports[ i ] ),
                                   pBuffer,
                                   currentIndex );
             currentIndex += RTCP_RECEPTION_REPORT_LENGTH;
@@ -727,7 +727,7 @@ RtcpResult_t Rtcp_SerializeReceiverReport( RtcpContext_t * pCtx,
         for( i = 0; i < pReceiverReport->numReceptionReports; i++ )
         {
             WriteReceptionReport( pCtx,
-                                  &( pReceiverReport->pReceptionReports[ i ]  ),
+                                  &( pReceiverReport->pReceptionReports[ i ] ),
                                   pBuffer,
                                   currentIndex );
             currentIndex += RTCP_RECEPTION_REPORT_LENGTH;
@@ -751,6 +751,7 @@ RtcpResult_t Rtcp_DeserializePacket( RtcpContext_t * pCtx,
     RtcpResult_t result = RTCP_RESULT_OK;
     uint32_t firstWord;
     size_t packetLengthInWords;
+    RtcpPacketType_t rtcpPacketType;
     uint8_t packetType, fmt;
 
     if( ( pCtx == NULL ) ||
@@ -790,17 +791,27 @@ RtcpResult_t Rtcp_DeserializePacket( RtcpContext_t * pCtx,
 
     if( result == RTCP_RESULT_OK )
     {
-        pRtcpPacket->header.padding = ( firstWord & RTCP_HEADER_PADDING_BITMASK ) >>
-                                      RTCP_HEADER_PADDING_LOCATION;
-
-         /* RC field is FMT in some Application Feedback and Transport Feedback
-          * messages. */
+        /* RC field is FMT in some Application Feedback and Transport Feedback
+         * messages. */
         fmt = ( firstWord & RTCP_HEADER_RC_BITMASK ) >>
               RTCP_HEADER_RC_LOCATION;
         packetType = ( firstWord & RTCP_HEADER_PACKET_TYPE_BITMASK ) >>
                      RTCP_HEADER_PACKET_TYPE_LOCATION;
 
-        pRtcpPacket->header.packetType = GetRtcpPacketType( packetType, fmt );
+        rtcpPacketType = GetRtcpPacketType( packetType, fmt );
+
+        if( rtcpPacketType == RTCP_PACKET_UNKNOWN )
+        {
+            result = RTCP_RESULT_MALFORMED_PACKET;
+        }
+    }
+
+    if( result == RTCP_RESULT_OK )
+    {
+        pRtcpPacket->header.padding = ( firstWord & RTCP_HEADER_PADDING_BITMASK ) >>
+                                      RTCP_HEADER_PADDING_LOCATION;
+
+        pRtcpPacket->header.packetType = rtcpPacketType;
         pRtcpPacket->header.receptionReportCount = fmt;
 
         pRtcpPacket->pPayload = &( pSerializedPacket[ RTCP_HEADER_LENGTH ] );
@@ -898,6 +909,7 @@ RtcpResult_t Rtcp_ParseSliPacket( RtcpContext_t * pCtx,
                 currentIndex += 4;
                 numSliInfos += 1;
             }
+
             pSliPacket->numSliInfos = numSliInfos;
         }
     }
@@ -927,7 +939,7 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
     }
 
     if( ( result == RTCP_RESULT_OK ) &&
-         ( pRtcpPacket->payloadLength < RTCP_REMB_PACKET_MIN_PAYLOAD_LENGTH ) )
+        ( pRtcpPacket->payloadLength < RTCP_REMB_PACKET_MIN_PAYLOAD_LENGTH ) )
     {
         result = RTCP_RESULT_INPUT_REMB_PACKET_INVALID;
     }
@@ -980,6 +992,7 @@ RtcpResult_t Rtcp_ParseRembPacket( RtcpContext_t * pCtx,
             pRembPacket->pSsrcList[ i ] = RTCP_READ_UINT32( &( pRtcpPacket->pPayload[ currentIndex ] ) );
             currentIndex += 4;
         }
+
         pRembPacket->ssrcListLength = numSsrc;
     }
 
@@ -1045,6 +1058,7 @@ RtcpResult_t Rtcp_ParseSenderReport( RtcpContext_t * pCtx,
                                  &( pSenderReport->pReceptionReports[ i ] ) );
             currentIndex += RTCP_RECEPTION_REPORT_LENGTH;
         }
+
         pSenderReport->numReceptionReports = pRtcpPacket->header.receptionReportCount;
     }
 
@@ -1103,6 +1117,7 @@ RtcpResult_t Rtcp_ParseReceiverReport( RtcpContext_t * pCtx,
                                  &( pReceiverReport->pReceptionReports[ i ] ) );
             currentIndex += RTCP_RECEPTION_REPORT_LENGTH;
         }
+
         pReceiverReport->numReceptionReports = pRtcpPacket->header.receptionReportCount;
     }
 
@@ -1124,7 +1139,7 @@ RtcpResult_t Rtcp_ParseNackPacket( RtcpContext_t * pCtx,
         ( pNackPacket == NULL ) ||
         ( pRtcpPacket->pPayload == NULL ) ||
         ( pRtcpPacket->payloadLength < RTCP_NACK_PACKET_MIN_PAYLOAD_LENGTH ) ||
-        ( ( pRtcpPacket->payloadLength % 4 ) != 0  ) ||
+        ( ( pRtcpPacket->payloadLength % 4 ) != 0 ) ||
         ( pRtcpPacket->header.packetType != RTCP_PACKET_TRANSPORT_FEEDBACK_NACK ) )
     {
         result = RTCP_RESULT_BAD_PARAM;
@@ -1159,6 +1174,7 @@ RtcpResult_t Rtcp_ParseNackPacket( RtcpContext_t * pCtx,
                     break;
                 }
             }
+
             seqNumCount += 1;
 
             /* Iterate over 16 bits of bitmask. */
@@ -1178,10 +1194,12 @@ RtcpResult_t Rtcp_ParseNackPacket( RtcpContext_t * pCtx,
                             break;
                         }
                     }
+
                     seqNumCount += 1;
                 }
             }
         }
+
         pNackPacket->seqNumListLength = seqNumCount;
     }
 

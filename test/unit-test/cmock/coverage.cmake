@@ -18,7 +18,13 @@ execute_process( COMMAND lcov --directory ${CMAKE_BINARY_DIR}
                          --rc lcov_branch_coverage=1
                          --output-file=${CMAKE_BINARY_DIR}/base_coverage.info
                          --include "*source*"
-        )
+                         --exclude "*source/rtcp_endianness.c*"
+        )               # The functions in rtcp_endianness.c file handle endianness-specific operations for both
+                        # little-endian and big-endian systems. Due to the nature of these operations,
+                        # it is not possible to achieve 100% code coverage as the execution path taken
+                        # depends on the endianness of the target system. Therefore, some branches may
+                        # remain uncovered during testing on a specific endianness.
+                        
 file(GLOB files "${CMAKE_BINARY_DIR}/bin/tests/*")
 
 set(REPORT_FILE ${CMAKE_BINARY_DIR}/utest_report.txt)
@@ -52,6 +58,7 @@ execute_process(
                          --directory ${CMAKE_BINARY_DIR}
                          --output-file ${CMAKE_BINARY_DIR}/second_coverage.info
                          --include "*source*"
+                         --exclude "*source/rtcp_endianness.c*"
         )
 
 # Combile baseline results (zeros) with the one after running the tests.
@@ -63,6 +70,7 @@ execute_process(
                          --output-file ${CMAKE_BINARY_DIR}/coverage.info
                          --rc lcov_branch_coverage=1
                          --include "*source*"
+                         --exclude "*source/rtcp_endianness.c*"
         )
 execute_process(
             COMMAND genhtml --rc lcov_branch_coverage=1
