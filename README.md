@@ -86,48 +86,34 @@ following command to clone the submodule:
 git submodule update --checkout --init --recursive test/CMock
 ```
 
-### Steps to Build and Run Unit Tests
+### Steps to Build Unit Tests
 
 1. Go to the root directory of this repository. Make sure that the CMock
    submodule is cloned as described in [Checkout CMock Submodule](#checkout-cmock-submodule).
 2. Run the following command to generate Makefiles:
 
-    ```sh
-    cmake -S test/unit-test -B build/ -G "Unix Makefiles" \
-     -DCMAKE_BUILD_TYPE=Debug \
-     -DBUILD_CLONE_SUBMODULES=ON \
-     -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
-    ```
-3. Run the following command to build the library and unit tests:
-
-    ```sh
-    make -C build all
-    ```
-4. Run the following command to execute all tests and view results:
-
-    ```sh
-    cd build && ctest -E system --output-on-failure
-    ```
-
-### Steps to Generate Code Coverage Report
-
-1. Run Unit Tests in [Steps to Build and Run Unit Tests](#steps-to-build-and-run-unit-tests).
-2. Generate coverage report in the `build/coverage` folder:
-
-    ```
-    make coverage
-    ```
-
-### Script to Run Unit Test and Generate Code Coverage Report
-
-```sh
-git submodule update --init --recursive --checkout test/CMock
-cmake -S test/unit-test -B build/ -G "Unix Makefiles"  -DBUILD_CLONE_SUBMODULES=ON -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG -DLIBRARY_LOG_LEVEL=LOG_DEBUG'
-make -C build all
-cd build
-ctest -E system --output-on-failure
-make coverage
-```
+     ```sh
+     cmake -S test/unit-test -B build/ -G "Unix Makefiles" \
+      -DCMAKE_BUILD_TYPE=Debug \
+      -DBUILD_CLONE_SUBMODULES=ON \
+      -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
+     ```
+ 
+ ### Steps to Generate Code Coverage Report and Run Unit Tests
+ 
+ 1. Run Unit Tests in [Steps to Build Unit Tests](#steps-to-build-unit-tests).
+ 2. Generate coverage report in the `build/coverage` folder:
+ 
+     ```
+     cd build && make coverage
+     ```
+ 
+ ### Script to Run Unit Test and Generate Code Coverage Report
+ 
+ ```sh
+ cmake -S test/unit-test -B build/ -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DBUILD_CLONE_SUBMODULES=ON -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG -DLIBRARY_LOG_LEVEL=LOG_DEBUG'
+ cd build && make coverage
+ ```
 
 ## Security
 
