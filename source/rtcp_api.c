@@ -52,7 +52,6 @@
  * |V=2|P|    FMT     |       PT      |             length         |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-#define RTCP_HEADER_LENGTH                    4
 #define RTCP_HEADER_VERSION                   2
 
 #define RTCP_HEADER_VERSION_BITMASK           0xC0000000
@@ -249,7 +248,7 @@ static RtcpPacketType_t GetRtcpPacketType( uint8_t packetType,
             ret = RTCP_PACKET_SOURCE_DESCRIPTION;
         }
         break;
-        
+
         case RTCP_PACKET_TYPE_TRANSPORT_SPECIFIC_FEEDBACK:
         {
             if( fmt == RTCP_FMT_TRANSPORT_SPECIFIC_FEEDBACK_NACK )
