@@ -1,6 +1,5 @@
 /* Unity includes. */
 #include "unity.h"
-#include "catch_assert.h"
 
 /* Standard includes. */
 #include <stdlib.h>
