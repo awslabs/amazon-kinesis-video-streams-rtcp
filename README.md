@@ -88,32 +88,36 @@ git submodule update --checkout --init --recursive test/CMock
 
 ### Steps to Build Unit Tests
 
-1. Go to the root directory of this repository. Make sure that the CMock
-   submodule is cloned as described in [Checkout CMock Submodule](#checkout-cmock-submodule).
-2. Run the following command to generate Makefiles:
+1. Run the following command from the root directory of this repository to
+   generate Makefiles:
 
-     ```sh
-     cmake -S test/unit-test -B build/ -G "Unix Makefiles" \
-      -DCMAKE_BUILD_TYPE=Debug \
-      -DBUILD_CLONE_SUBMODULES=ON \
-      -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
-     ```
- 
- ### Steps to Generate Code Coverage Report and Run Unit Tests
- 
- 1. Run Unit Tests in [Steps to Build Unit Tests](#steps-to-build-unit-tests).
- 2. Generate coverage report in the `build/coverage` folder:
- 
-     ```
-     cd build && make coverage
-     ```
- 
- ### Script to Run Unit Test and Generate Code Coverage Report
- 
- ```sh
+   ```sh
+   cmake -S test/unit-test -B build/ -G "Unix Makefiles" \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DBUILD_CLONE_SUBMODULES=ON \
+    -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG'
+   ```
+
+2. Run the following command to build the unit tests:
+   ```sh
+   cd build && make
+   ```
+
+### Steps to Generate Code Coverage Report and Run Unit Tests
+
+1. Build Unit Tests as described in [Steps to Build Unit Tests](#steps-to-build-unit-tests).
+2. Generate coverage report in the `build/coverage` folder:
+
+   ```
+   cd build && make coverage
+   ```
+
+### Script to Run Unit Test and Generate Code Coverage Report
+
+```sh
  cmake -S test/unit-test -B build/ -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DBUILD_CLONE_SUBMODULES=ON -DCMAKE_C_FLAGS='--coverage -Wall -Wextra -Werror -DNDEBUG -DLIBRARY_LOG_LEVEL=LOG_DEBUG'
  cd build && make coverage
- ```
+```
 
 ## Security
 
