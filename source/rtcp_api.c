@@ -52,7 +52,6 @@
  * |V=2|P|    FMT     |       PT      |             length         |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
-#define RTCP_HEADER_LENGTH                    4
 #define RTCP_HEADER_VERSION                   2
 
 #define RTCP_HEADER_VERSION_BITMASK           0xC0000000
@@ -241,6 +240,12 @@ static RtcpPacketType_t GetRtcpPacketType( uint8_t packetType,
         case RTCP_PACKET_TYPE_RECEIVER_REPORT:
         {
             ret = RTCP_PACKET_RECEIVER_REPORT;
+        }
+        break;
+
+        case RTCP_PACKET_TYPE_SOURCE_DESCRIPTION:
+        {
+            ret = RTCP_PACKET_SOURCE_DESCRIPTION;
         }
         break;
 

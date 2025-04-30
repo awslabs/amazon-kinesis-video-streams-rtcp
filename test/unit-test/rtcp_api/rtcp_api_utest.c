@@ -1,6 +1,5 @@
 /* Unity includes. */
 #include "unity.h"
-#include "catch_assert.h"
 
 /* Standard includes. */
 #include <stdlib.h>
@@ -1199,6 +1198,39 @@ void test_rtcpDeSerializePacket_ReceiverReport( void )
 /*-----------------------------------------------------------*/
 
 /**
+ * @brief Validate RTCP DeSerialize Packet functionality.
+ */
+void test_rtcpDeSerializePacket_SourceDescription( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket = { 0 };
+    RtcpResult_t result;
+    uint8_t serializedPacket[] =
+    {
+        0x82, 0xCA, 0x00, 0x01, /* Header: V=2, P=0, FMT=2, PT=SDES=202, Length = 0x1 words. */
+        0x87, 0x65, 0x43, 0x21, /* Sender SSRC. */
+    };
+    size_t serializedPacketLength = sizeof( serializedPacket );
+
+    result = Rtcp_Init( &( context ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    result = Rtcp_DeserializePacket( &( context ),
+                                     &( serializedPacket[ 0 ] ),
+                                     serializedPacketLength,
+                                     &( rtcpPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+    TEST_ASSERT_EQUAL( RTCP_PACKET_SOURCE_DESCRIPTION,
+                       rtcpPacket.header.packetType );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
  * @brief Validate RTCP Parse Fir Packet fail functionality for Bad Parameters.
  */
 void test_rtcpParseFirPacket_BadParams( void )
@@ -1608,6 +1640,64 @@ void test_rtcpParseSliPacket( void )
                        RTCP_SLI_INFO_EXTRACT_NUMBER( rtcpSliPacket.pSliInfos[ 1 ] ) );
     TEST_ASSERT_EQUAL( 28,
                        RTCP_SLI_INFO_EXTRACT_PICTURE_ID( rtcpSliPacket.pSliInfos[ 1 ] ) );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Sli Packet functionality for truncated payload.
+ */
+void test_rtcpParseSliPacket_TruncatedPayload( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    RtcpResult_t result;
+    uint32_t sliInfo[ 2 ];
+    RtcpSliPacket_t rtcpSliPacket;
+    uint8_t sliPacketPayload[] =
+    {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC. */
+        0x87, 0x65, 0x43, 0x21, /* Media Source SSRC. */
+        /* Only one SLI Info: First = 7191, Number = 6242, Picture ID = 31. */
+        0xE0, 0xBE, 0x18, 0x9F,
+    };
+    size_t sliPacketPayloadLength = sizeof( sliPacketPayload );
+
+    result = Rtcp_Init( &( context ) );
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+
+    rtcpPacket.header.padding = 0;
+    rtcpPacket.header.receptionReportCount = 0;
+    rtcpPacket.header.packetType = RTCP_PACKET_PAYLOAD_FEEDBACK_SLI;
+    rtcpPacket.pPayload = &( sliPacketPayload[ 0 ] );
+    rtcpPacket.payloadLength = sliPacketPayloadLength;
+
+    /* Request 2 SLI infos but payload only contains 1. */
+    rtcpSliPacket.pSliInfos = &( sliInfo[ 0 ] );
+    rtcpSliPacket.numSliInfos = 2;
+
+    result = Rtcp_ParseSliPacket( &( context ),
+                                  &( rtcpPacket ),
+                                  &( rtcpSliPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK,
+                       result );
+    TEST_ASSERT_EQUAL( 0x12345678,
+                       rtcpSliPacket.senderSsrc );
+    TEST_ASSERT_EQUAL( 0x87654321,
+                       rtcpSliPacket.mediaSourceSsrc );
+    /* Should only get one SLI info despite requesting two. */
+    TEST_ASSERT_EQUAL( 1,
+                       rtcpSliPacket.numSliInfos );
+    TEST_ASSERT_EQUAL( 0xE0BE189F,
+                       rtcpSliPacket.pSliInfos[ 0 ] );
+    TEST_ASSERT_EQUAL( 7191,
+                       RTCP_SLI_INFO_EXTRACT_FIRST( rtcpSliPacket.pSliInfos[ 0 ] ) );
+    TEST_ASSERT_EQUAL( 6242,
+                       RTCP_SLI_INFO_EXTRACT_NUMBER( rtcpSliPacket.pSliInfos[ 0 ] ) );
+    TEST_ASSERT_EQUAL( 31,
+                       RTCP_SLI_INFO_EXTRACT_PICTURE_ID( rtcpSliPacket.pSliInfos[ 0 ] ) );
 }
 
 /*-----------------------------------------------------------*/
@@ -2824,6 +2914,54 @@ void test_rtcpParseTwccPacket_RunLengthChunk_OutOfMemory( void )
 
     TEST_ASSERT_EQUAL( RTCP_RESULT_OUT_OF_MEMORY,
                        result );
+}
+
+/*-----------------------------------------------------------*/
+
+/**
+ * @brief Validate RTCP Parse Twcc Packet functionality for exact payload length boundary.
+ */
+void test_rtcpParseTwccPacket_ExactPayloadLength( void )
+{
+    RtcpContext_t context;
+    RtcpPacket_t rtcpPacket;
+    PacketArrivalInfo_t packetArrivalInfo[3];
+    RtcpTwccPacket_t rtcpTwccPacket;
+    RtcpResult_t result;
+    uint8_t twccPacketPayload[] =
+    {
+        0x12, 0x34, 0x56, 0x78, /* Sender SSRC. */
+        0x9A, 0xBC, 0xDE, 0xF0, /* Media Source SSRC. */
+        0x00, 0x01,             /* Base Sequence Number. */
+        0x00, 0x02,             /* Packet Status Count. */
+        0x00, 0x00, 0x00, 0x01, /* Reference Time, Feedback Packet Count. */
+        0x20, 0x01,             /* Run Length Chunk: type and run length=1. */
+        0x01                    /* One delta value. */
+    };
+
+    result = Rtcp_Init( &( context ) );
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK, result );
+
+    rtcpPacket.pPayload = twccPacketPayload;
+    /* Set payload length to exactly match the data we have. */
+    rtcpPacket.payloadLength = sizeof( twccPacketPayload );
+    rtcpPacket.header.packetType = RTCP_PACKET_TRANSPORT_FEEDBACK_TWCC;
+    rtcpPacket.header.padding = 0;
+    rtcpPacket.header.receptionReportCount = 0;
+
+    rtcpTwccPacket.pArrivalInfoList = packetArrivalInfo;
+    rtcpTwccPacket.arrivalInfoListLength = 3;
+
+    result = Rtcp_ParseTwccPacket( &( context ),
+                                   &( rtcpPacket ),
+                                   &( rtcpTwccPacket ) );
+
+    TEST_ASSERT_EQUAL( RTCP_RESULT_OK, result );
+    TEST_ASSERT_EQUAL( 0x12345678, rtcpTwccPacket.senderSsrc );
+    TEST_ASSERT_EQUAL( 0x9ABCDEF0, rtcpTwccPacket.mediaSourceSsrc );
+    TEST_ASSERT_EQUAL( 0x0001, rtcpTwccPacket.baseSeqNum );
+    TEST_ASSERT_EQUAL( 2, rtcpTwccPacket.packetStatusCount );
+    TEST_ASSERT_EQUAL( 1, rtcpTwccPacket.arrivalInfoListLength );
 }
 
 /*-----------------------------------------------------------*/

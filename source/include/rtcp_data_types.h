@@ -10,6 +10,18 @@
 
 /*-----------------------------------------------------------*/
 
+/* RTCP Header:
+ *
+ *  0                   1                   2                   3
+ *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |V=2|P|    FMT     |       PT      |             length         |
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ */
+#define RTCP_HEADER_LENGTH                    4
+
+/*-----------------------------------------------------------*/
+
 /*
  * Sender Report (SR) RFC - https://datatracker.ietf.org/doc/html/rfc3550#section-6.4.1
  * Receiver Report (RR) RFC - https://datatracker.ietf.org/doc/html/rfc3550#section-6.4.2
@@ -48,6 +60,7 @@ typedef enum RtcpPacketType
     RTCP_PACKET_FIR,
     RTCP_PACKET_SENDER_REPORT,
     RTCP_PACKET_RECEIVER_REPORT,
+    RTCP_PACKET_SOURCE_DESCRIPTION,
     RTCP_PACKET_PAYLOAD_FEEDBACK_PLI,
     RTCP_PACKET_PAYLOAD_FEEDBACK_SLI,
     RTCP_PACKET_PAYLOAD_FEEDBACK_REMB,
