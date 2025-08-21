@@ -49,7 +49,7 @@ if( COV_ANALYSIS )
         add_library( coverity_analysis
                      ${RTCP_SOURCES} )
 
-        # SDP public include path.
+        # RTCP public include path.
         target_include_directories( coverity_analysis PUBLIC
                                     ${RTCP_INCLUDE_PUBLIC_DIRS} )
 
